@@ -9,7 +9,7 @@ var webPanel
 /**
  * @type {String}
  *
- * @properties={typeid:35,uuid:"D4D48585-66AE-4268-A145-ADF7BAFBE1D7"}
+ * @properties={typeid:35,uuid:"96555A9A-76A2-487D-8CAD-EA74CDBA4AE2"}
  */
 var url
 
@@ -23,7 +23,7 @@ var url
  * @properties={typeid:24,uuid:"2335A750-E4EC-4050-92D8-4FA60759D279"}
  */
 function onLoad(event) {
-	webPanel = new scopes.modWebView.JFXWebViewWebPanel(elements.tabless)
+	webPanel = new scopes.modJFXWebView.WebViewPanel(elements.tabless)
 }
 
 /**

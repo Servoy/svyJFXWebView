@@ -28,7 +28,7 @@
  * @type {scopes.modUtils$log.Logger}
  * @properties={typeid:35,uuid:"5DBA7CA5-3CD8-4D42-91B1-3834E7CBCFC1",variableType:-4}
  */
-var log = scopes.modWebView['log']
+var log = scopes.modJFXWebView['log']
 
 /**
  * @private

@@ -22,7 +22,7 @@
  *
  * @properties={typeid:24,uuid:"9C95D0A8-7A31-4AF6-8011-771DE24E863A"}
  */
-function JFXWebViewWebPanel(container) {
+function WebViewPanel(container) {
 	var formName = application.getUUID().toString()
 	application.createNewFormInstance("JFXWebViewPanel", formName)
 
