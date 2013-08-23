@@ -22,9 +22,9 @@
  *
  * @properties={typeid:24,uuid:"9C95D0A8-7A31-4AF6-8011-771DE24E863A"}
  */
-function WebPanel(container) {
+function JFXWebViewWebPanel(container) {
 	var formName = application.getUUID().toString()
-	application.createNewFormInstance("WebPanel", formName)
+	application.createNewFormInstance("JFXWebViewPanel", formName)
 
 	container.removeAllTabs()
 	container.addTab(forms[formName])
@@ -79,7 +79,7 @@ var init = function() {
 	//TODO: add check to test for JavaFX availability
 	if (scopes.modUtils$system.isSwingClient()) {
 		/*
-		 * Registering a URLStreamHandler for the 'callback://' protocol, to be used from within HTML inside WebPanels to do callbacks to Servoy's JavaScript layer based on URL's 
+		 * Registering a URLStreamHandler for the 'callback://' protocol, to be used from within HTML inside JFXWebView to do callbacks to Servoy's JavaScript layer based on URL's 
 		 * 
 		 * The URLStreamHandler for the 'callback://' protocol is needed to be able to intercept requests to such URL's.
 		 * 

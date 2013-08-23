@@ -9,7 +9,7 @@ var webPanel
 /**
  * @type {String}
  *
- * @properties={typeid:35,uuid:"75F3E040-A584-4557-BCBF-64797DC3D90C"}
+ * @properties={typeid:35,uuid:"D4D48585-66AE-4268-A145-ADF7BAFBE1D7"}
  */
 var url
 
@@ -23,7 +23,7 @@ var url
  * @properties={typeid:24,uuid:"2335A750-E4EC-4050-92D8-4FA60759D279"}
  */
 function onLoad(event) {
-	webPanel = new scopes.modWebView.WebPanel(elements.tabless)
+	webPanel = new scopes.modWebView.JFXWebViewWebPanel(elements.tabless)
 }
 
 /**
@@ -57,7 +57,7 @@ function onAction(event) {
 /**
  * @properties={typeid:24,uuid:"F5CBD179-0582-466A-8B97-C6063BD813A4"}
  */
-function testWebPanel() {
+function testJFXWebViewWebPanel() {
 	var content = <html>
 		<body style="background-color: transparent">
 			<a id="lnk_old" href="callback://testCallbackUrl">Invoke local method urlCallback</a><br/>

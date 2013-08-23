@@ -83,7 +83,7 @@ var executeScriptCountdownLatch
  * @private
  * @properties={typeid:24,uuid:"B4DC94FB-14B9-440C-B4C4-2EFE28DA2DC2"}
  */
-function setUpWebPanel() {
+function setUpPanel() {
 	//This component depends on the availability of JavaFX. 
 	//Must be made available in Smart Clients by setting the property servoy.client.javafx to true through the Admin pages
 	//JavaFX comes pre-installed with Java 7 update 6 or higher.
@@ -145,7 +145,7 @@ function setUpWebPanel() {
 		State = Packages.javafx.concurrent.Worker.State
 
 	var latch = new java.util.concurrent.CountDownLatch(1)
-	//Setup the UI for the WebPanel
+	//Setup the UI for the JFXWebViewPanel
 	Platform.runLater(new Runnable({
 		run: function() {
 			//TODO: add transparent background support when implemented, see https://javafx-jira.kenai.com/browse/RT-25004
@@ -194,7 +194,7 @@ function setUpWebPanel() {
 						var messageObject = JSON.parse(message)
 						switch (messageObject.method) {
 							case 'Console.messageAdded':
-								var output = 'WebPanel console: ' + messageObject.params.message.text
+								var output = 'JFXWebViewPanel console: ' + messageObject.params.message.text
 								switch (messageObject.params.message.level) {
 									case 'error':
 										if (messageObject.params.message.stackTrace) {
@@ -225,7 +225,7 @@ function setUpWebPanel() {
 								break;
 						}
 						if (log.isTraceEnabled()) {
-							log.trace('WebPanel form dimensions: x=' + controller.getFormWidth() + ', y=?')
+							log.trace('JFXWebViewPanel form dimensions: x=' + controller.getFormWidth() + ', y=?')
 							log.trace('JFXPanel bean dimensions: x=' + elements.webPanel.getWidth() + ', y=' + elements.webPanel.getHeight())
 							//TODO: this raises errors in the log that getwidth is know known...................
 							log.trace('scene dimensions: x=' + elements.webPanel.scene.getWidth() + ', y=' + elements.webPanel.scene.getHeight())
@@ -378,7 +378,7 @@ function setUpWebPanel() {
  * @properties={typeid:24,uuid:"21AC843D-1481-4CBC-9D6E-6E67803E0052"}
  */
 function onLoad(event) {
-	setUpWebPanel()
+	setUpPanel()
 }
 
 /**
@@ -482,7 +482,7 @@ function executeScript(code) {
 }
 
 /**
- * Helper method to print the HTML content of the WebPanel
+ * Helper method to print the HTML content of the JFXWebView
  * @private 
  * @param doc
  *
@@ -526,8 +526,8 @@ function enableFirebug() {
  */
 function onResize(event) {
 	if (log.isDebugEnabled()) {
-		log.debug('onResize WebPanel form resized: x=' + controller.getFormWidth() + ', y=?')
-		log.debug('onResize WebPane preferred sizes: x=' + browser.getPrefWidth() + ', y=' + browser.getPrefHeight())
+		log.debug('onResize JFXWebViewPanel form resized: x=' + controller.getFormWidth() + ', y=?')
+		log.debug('onResize JFXWebViewPanel preferred sizes: x=' + browser.getPrefWidth() + ', y=' + browser.getPrefHeight())
 		log.debug('onResize scene preferred sizes: x=' + scene.widthProperty().getValue() + ', y=' + scene.heightProperty().getValue())
 	}
 }
@@ -544,7 +544,7 @@ function onResize(event) {
  */
 function onShow(firstShow, event) {
 	if (log.isDebugEnabled()) {
-		log.debug('onShow WebPanel form dimensions: x=' + elements.webPanel.getWidth() + ', y=' + elements.webPanel.getHeight())
+		log.debug('onShow JFXWebViewPanel form dimensions: x=' + elements.webPanel.getWidth() + ', y=' + elements.webPanel.getHeight())
 		log.debug('onShow scene dimensions: x=' + elements.webPanel.scene.getWidth() + ', y=' + elements.webPanel.scene.getHeight())
 	}
 }

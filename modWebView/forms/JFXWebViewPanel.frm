@@ -17,7 +17,7 @@ typeid:19,
 uuid:"F498BE29-90A7-45DA-8228-FF7EF37DE9D8"
 }
 ],
-name:"WebPanel",
+name:"JFXWebViewPanel",
 navigatorID:"-1",
 onLoadMethodID:"21AC843D-1481-4CBC-9D6E-6E67803E0052",
 onResizeMethodID:"78F24B70-09E5-4431-B752-71357F17F714",
