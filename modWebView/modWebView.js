@@ -16,6 +16,7 @@
  */
 
 /**
+ * Creates and displays a JavaFX WebView component in the supplied container
  * @constructor
  * @param {RuntimeTabPanel} container
  *
@@ -25,17 +26,14 @@ function WebPanel(container) {
 	var formName = application.getUUID().toString()
 	application.createNewFormInstance("WebPanel", formName)
 
-	/** @type {RuntimeForm<WebPanel>} */
-	var webPanel = forms[formName]
-
 	container.removeAllTabs()
-	container.addTab(webPanel)
+	container.addTab(forms[formName])
 
 	/**
 	 * @param {String} url
 	 */
 	this.load = function(url) {
-		webPanel.load(url)
+		forms[formName].load(url)
 	}
 
 	/**
@@ -43,18 +41,18 @@ function WebPanel(container) {
 	 * @param {String} [contentType]
 	 */
 	this.loadContent = function(content, contentType) {
-		webPanel.loadContent(content, contentType)
+		forms[formName].loadContent(content, contentType)
 	}
 	/**
 	 * @param {String} script
 	 * @return {*}
 	 */
 	this.executeScript = function(script) {
-		return webPanel.executeScript(script)
+		return forms[formName].executeScript(script)
 	}
 	
 	this.enableFirebug = function() {
-		webPanel.enableFirebug()
+		forms[formName].enableFirebug()
 	}
 }
 
@@ -91,12 +89,12 @@ var init = function() {
 		 * a real compiled Java Class is used, as extending URLStreamHandler and implementing IDeveloperURLStreamHandler using Rhino's Java/JavaScript interaction capabilities 
 		 * would create a Java Class that holds onto the JavaScript scope in which it is created, which in turn would cause errors and memory leaks when switching solutions in the SC/restarting DSC's
 		 * 
-		 * In order to not have external dependancies on beans/plugins, the required Java class is stored in the media library, which in turn requires a custom URLCLassLoader to retrieve it
+		 * In order to not have external dependencies on beans/plugins, the required Java class is stored in the media library, which in turn requires a custom URLCLassLoader to retrieve it
 		 */
 		var cx = Packages.org.mozilla.javascript.Context.getCurrentContext()
 		var customCL = java.net.URLClassLoader([new java.net.URL("media:///bin/")], cx.getApplicationClassLoader())
 		
-		var dummyURLStreamHandlerClass = java.lang.Class.forName("com.servoy.bap.DummyURLStreamHandler", false, customCL)
+		var dummyURLStreamHandlerClass = java.lang.Class.forName("com.servoy.bap.webpane.DummyURLStreamHandler", false, customCL)
 		
 		//Using inlined code from scopes.modUtils$smartClient.unwrapElement & scopes.modUtils$smartClient.getSmartClientPluginAccess so not having to make registerURLStreamHandler a public method, since too dangerous:
 		//using registerURLStreamHandler with a Java Class that has a (partial) JavaScript implementation causes mem-leaks and errors after switching solution

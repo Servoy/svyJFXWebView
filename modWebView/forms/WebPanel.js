@@ -16,17 +16,11 @@
  */
 
 /*
- * How to compensate for missing constructor init logic option: https://groups.google.com/forum/?fromgroups=#!topic/mozilla.dev.tech.js-engine.rhino/rFfQ0e2Jta4
- *
- * See:
- * http://docs.oracle.com/javafx/2/api/javafx/scene/web/WebEngine.html
+ * See: http://docs.oracle.com/javafx/2/api/javafx/scene/web/WebEngine.html
  * 
  * CHECKME: see if the cache of JS/CSS resources can somehow be controlled. Currently seems that you need to restart Servoy Developer to realy clear the cache (https://forums.oracle.com/message/11040487#11040487)
- * FIXME: remove testing code/variables
- * FIXME: decouple impl from instance and use prototyping
  * TODO: add relevant Listeners
- * TODO: expose relevant properties
- * CHECKME: check if no mem-leaks are introduced
+ * TODO: expose more relevant properties
  */
 
 /**
@@ -78,6 +72,15 @@ var webEngineNotReadyCountdownLatch
 
 /**
  * @private
+ * @type {java.util.concurrent.CountDownLatch}
+ *
+ * @properties={typeid:35,uuid:"D88D3A02-6EAF-4E9C-A720-64CC9A4F38B7",variableType:-4}
+ */
+var executeScriptCountdownLatch
+
+
+/**
+ * @private
  * @properties={typeid:24,uuid:"B4DC94FB-14B9-440C-B4C4-2EFE28DA2DC2"}
  */
 function setUpWebPanel() {
@@ -101,15 +104,31 @@ function setUpWebPanel() {
 	 * @throws {scopes.modUtils$exceptions.IllegalArgumentException}
 	 */
 	function callServoyMethod(qualifiedName, args) {
+		log.debug('callback: ' + qualifiedName + ' (' + args + ' )' )
+		
 		function callMethod() {
-			var parentForm = scopes.modUtils$UI.getParentFormName(forms[controller.getName()])
-			var context = parentForm ? forms[parentForm] : null
+			var parentFormName = scopes.modUtils$UI.getParentFormName(forms[controller.getName()])
+			var context = parentFormName ? forms[parentFormName] : null
 			return scopes.modUtils.callServoyMethod.call(context, qualifiedName, args)
 		}
 		
-		if (Packages.javax.swing.SwingUtilities.isEventDispatchThread()) {
+		if (Packages.javax.swing.SwingUtilities.isEventDispatchThread()) { //This scenario is not likely to happen
+			log.debug('Performing callback directly on Swing\'s EDT')
 			return callMethod()
+		} else if (executeScriptCountdownLatch && !executeScriptCountdownLatch.getCount()) { //To prevent deadlocks
+			log.debug('Performing callback through SwingUtilities.invokeAndWait')
+			var tmp
+			Packages.javax.swing.SwingUtilities.invokeAndWait(new Runnable({
+				run: function() {
+					log.debug('Performing callback through SwingUtilities.invokeAndWait: run called')
+					tmp = callMethod()
+				}
+			}))
+			log.debug('Performing callback through SwingUtilities.invokeAndWait: returning: ' + JSON.stringify(tmp))
+			return tmp
 		} else {
+			log.debug('Performing callback through SwingUtilities.invokeLater')
+			log.warn('Prevented deadlock!!!!!!!!!!!')
 			Packages.javax.swing.SwingUtilities.invokeLater(new Runnable({
 				run: callMethod
 			}))
@@ -125,33 +144,6 @@ function setUpWebPanel() {
 		ChangeListener = Packages.javafx.beans.value.ChangeListener,
 		State = Packages.javafx.concurrent.Worker.State
 
-	try {
-		var cx = Packages.org.mozilla.javascript.Context.getCurrentContext()
-		var savedCL = cx.getApplicationClassLoader()
-		var mediaCL = java.net.URLClassLoader([new java.net.URL("media:///bin/")], savedCL)
-		cx.setApplicationClassLoader(mediaCL)	
-		/** @type {Packages} */
-		var MediaPackages = new Packages(mediaCL); //See http://osdir.com/ml/mozilla.devel.jseng/2002-06/msg00037.html
-						
-		//Setup the bridge to allow upcalls from the JavaScript inside the WebEngine and Servoy
-		//Using custom Java class here for the bridge between the WebEngine and Servoy's scripting layer, in order to have control over the argument types of the Java Methods
-		var callBackClass = new MediaPackages.com.servoy.bap.WebPaneScriptBridge({ //Packages.com.servoy.bap.WebPaneScriptBridge is custom Java class stored in the media://bin/ dir
-				executeMethod: function(methodName, args) {
-					var _args = []
-					if (args) {
-						for (var i = 0; i < args.getMember('length'); i++) {
-							_args.push(args.getSlot(i))
-						}
-					}
-					callServoyMethod(methodName, _args)
-				}
-			})
-	} catch (e) {
-		log.error(e)
-	} finally {
-		cx.setApplicationClassLoader(savedCL);	
-	}
-	
 	var latch = new java.util.concurrent.CountDownLatch(1)
 	//Setup the UI for the WebPanel
 	Platform.runLater(new Runnable({
@@ -172,81 +164,85 @@ function setUpWebPanel() {
 			
 			elements.webPanel.setScene(scene)
 			
-			webEngine.setOnResized(new Packages.javafx.event.EventHandler({
-				handle: function(evt){
-					log.trace('Webengine resized: ' + evt)
-				}
-			}))
+			if (log.isTraceEnabled()) {
+				webEngine.setOnResized(new Packages.javafx.event.EventHandler({
+					handle: function(evt){
+						log.trace('Webengine resized: ' + evt)
+					}
+				}))
+			}
 			
-			//TODO: make debugger optional
-			//Hook into WebEngine Debugging impl to log exceptions that happen in the page loaded into the WebPane
-			//WebPane exposes messageing interface that sends messages back and fort according to the Webkit Remote Debugging Protocol: https://developers.google.com/chrome-developer-tools/docs/protocol/1.0/console
-			var debuggerCallback = new Packages.javafx.util.Callback({
-				call: function(message) {
-					/** @type {{method: String,
-					 * 		params: {
-					 * 			message: {
-					 * 				text: String,
-					 * 				level: String,
-					 * 				stackTrace: Array<{
-					 * 					url: String,
-					 * 					lineNumber: Number,
-					 * 					functionName: String
-					 * 				}>
-					 * 			}		
-					 * 		}
-					 * }}
-					 */
-					var messageObject = JSON.parse(message)
-					switch (messageObject.method) {
-						case 'Console.messageAdded':
-							var output = 'WebPanel console: ' + messageObject.params.message.text
-							switch (messageObject.params.message.level) {
-								case 'error':
-									if (messageObject.params.message.stackTrace) {
-										var first = true
-										for each (var callFrame in messageObject.params.message.stackTrace) {
-											output += first ? ' ' : '\n\tat '
-											output += callFrame.url + ':' + callFrame.lineNumber + ' (' + callFrame.functionName + ')'
-											first = false
+			if (application.isInDeveloper() || log.isDebugEnabled()) {
+				//Hook into WebEngine Debugging impl to log exceptions that happen in the page loaded into the WebPane
+				//WebPane exposes messageing interface that sends messages back and fort according to the Webkit Remote Debugging Protocol: https://developers.google.com/chrome-developer-tools/docs/protocol/1.0/console
+				var debuggerCallback = new Packages.javafx.util.Callback({
+					call: function(message) {
+						/** @type {{method: String,
+						 * 		params: {
+						 * 			message: {
+						 * 				text: String,
+						 * 				level: String,
+						 * 				stackTrace: Array<{
+						 * 					url: String,
+						 * 					lineNumber: Number,
+						 * 					functionName: String
+						 * 				}>
+						 * 			}		
+						 * 		}
+						 * }}
+						 */
+						var messageObject = JSON.parse(message)
+						switch (messageObject.method) {
+							case 'Console.messageAdded':
+								var output = 'WebPanel console: ' + messageObject.params.message.text
+								switch (messageObject.params.message.level) {
+									case 'error':
+										if (messageObject.params.message.stackTrace) {
+											var first = true
+											for each (var callFrame in messageObject.params.message.stackTrace) {
+												output += first ? ' ' : '\n\tat '
+												output += callFrame.url + ':' + callFrame.lineNumber + ' (' + callFrame.functionName + ')'
+												first = false
+											}
 										}
-			
-									}
-									log.error(output)
-									break;
-								case 'debug':
-									log.debug(output)
-									break;
-								case 'warning':
-									log.warn(output)
-									break;
-								case 'log': //Intentional fallthrough
-								case 'tip': //Intentional fallthrough
-								default:
-									log.info(output)
-									break;
-							}
-							break;
-						
-						default:
-							break;
+										log.error(output)
+										break;
+									case 'debug':
+										log.debug(output)
+										break;
+									case 'warning':
+										log.warn(output)
+										break;
+									case 'log': //Intentional fallthrough
+									case 'tip': //Intentional fallthrough
+									default:
+										log.info(output)
+										break;
+								}
+								break;
+							
+							default:
+								break;
 						}
-					log.trace('WebPanel form dimensions: x=' + controller.getFormWidth() + ', y=?')
-					log.trace('JFXPanel bean dimensions: x=' + elements.webPanel.getWidth() + ', y=' + elements.webPanel.getHeight())
-					//TODO: this raises errors in the log that getwidth is know known...................
-					log.trace('scene dimensions: x=' + elements.webPanel.scene.getWidth() + ', y=' + elements.webPanel.scene.getHeight())
-					log.trace('Webview dimensions: x=' + browser.widthProperty().getValue() + ', y=' + browser.heightProperty().getValue())
-				}
-			})
-			
-			//Enable the debugger for the Console part only
-			webEngine.impl_getDebugger().setMessageCallback(debuggerCallback)
-			webEngine.impl_getDebugger().setEnabled(true)
-			webEngine.impl_getDebugger().sendMessage(JSON.stringify({
-				"id": 1,
-				"method": "Console.enable"
-			}))
-			
+						if (log.isTraceEnabled()) {
+							log.trace('WebPanel form dimensions: x=' + controller.getFormWidth() + ', y=?')
+							log.trace('JFXPanel bean dimensions: x=' + elements.webPanel.getWidth() + ', y=' + elements.webPanel.getHeight())
+							//TODO: this raises errors in the log that getwidth is know known...................
+							log.trace('scene dimensions: x=' + elements.webPanel.scene.getWidth() + ', y=' + elements.webPanel.scene.getHeight())
+							log.trace('Webview dimensions: x=' + browser.widthProperty().getValue() + ', y=' + browser.heightProperty().getValue())
+						}
+					}
+				})
+				
+				//Enable the debugger for the Console part only
+				webEngine.impl_getDebugger().setMessageCallback(debuggerCallback)
+				webEngine.impl_getDebugger().setEnabled(true)
+				webEngine.impl_getDebugger().sendMessage(JSON.stringify({
+					"id": 1,
+					"method": "Console.enable"
+				}))
+			}	
+				
 			//Logging of load exceptions
 			webEngine.getLoadWorker().exceptionProperty().addListener(new ChangeListener({
 				changed: function(observableValue, oldThrowable, newThrowable) {
@@ -259,27 +255,63 @@ function setUpWebPanel() {
 	}))
 	latch.await()
 	
-	elements.webPanel.addComponentListener(new java.awt.event.ComponentListener({
-		componentHidden: function(){},
-		componentMoved: function(){},
-		/**
-		 * @param {java.awt.event.ComponentEvent} evt
-		 */
-		componentResized: function(evt){
-			var size = evt.getComponent().size()
-			log.trace('JFXPanel resized to: ' + size)
-			Platform.runLater(new Runnable({
-				run: function() {
-					log.trace('Updating browser dimensions to: ' + size)
-					browser.setPrefSize(size.width, size.height)
-					browser.setMinSize(size.width, size.height)
-					browser.setMaxSize(size.width, size.height)
+	if (log.isDebugEnabled()) {
+		elements.webPanel.addComponentListener(new java.awt.event.ComponentListener({
+			componentHidden: function(){},
+			componentMoved: function(){},
+			/**
+			 * @param {java.awt.event.ComponentEvent} evt
+			 */
+			componentResized: function(evt){
+				var size = evt.getComponent().size()
+				log.trace('JFXPanel resized to: ' + size)
+				Platform.runLater(new Runnable({
+					run: function() {
+						log.trace('Updating browser dimensions to: ' + size)
+						browser.setPrefSize(size.width, size.height)
+						browser.setMinSize(size.width, size.height)
+						browser.setMaxSize(size.width, size.height)
+					}
+				}))
+				
+			},
+			componentshown:  function(){}
+		}))
+	}
+	
+	try {
+		var cx = Packages.org.mozilla.javascript.Context.getCurrentContext()
+		var savedCL = cx.getApplicationClassLoader()
+		var mediaCL = java.net.URLClassLoader([new java.net.URL("media:///bin/")], savedCL)
+		cx.setApplicationClassLoader(mediaCL)	
+		/** @type {Packages} */
+		var MediaPackages = new Packages(mediaCL); //See http://osdir.com/ml/mozilla.devel.jseng/2002-06/msg00037.html
+						
+		//Setup the bridge to allow upcalls from the JavaScript inside the WebEngine and Servoy
+		//Using custom Java class here for the bridge between the WebEngine and Servoy's scripting layer, in order to have control over the argument types of the Java Methods
+		var callBackClass = new MediaPackages.com.servoy.bap.webpane.WebPaneScriptBridge({ //Packages.com.servoy.bap.webpane.WebPaneScriptBridge is custom Java class stored in the media://bin/ dir
+				/**
+				 * @param {String} methodName
+				 * @param {Packages.netscape.javascript.JSObject} args
+				 */
+				executeMethod: function(methodName, args) {
+					var _args = []
+					if (args) {
+						//FIXME: getMember needs to be called recursivly, also on nested Arrays and Objects
+						for (var i = 0; i < args.getMember('length'); i++) {
+							_args.push(args.getSlot(i))
+						}
+					}
+					var tmp = callServoyMethod(methodName, _args)
+					log.debug('executeMethod returning: ' + JSON.stringify(tmp))
+					return JSON.stringify(tmp);
 				}
-			}))
-			
-		},
-		componentshown:  function(){}
-	}))
+			})
+	} catch (e) {
+		log.error(e)
+	} finally {
+		cx.setApplicationClassLoader(savedCL);	
+	}
 	
 	/*
 	 * Manage state when (re)loading content
@@ -302,7 +334,7 @@ function setUpWebPanel() {
 								var parsedUrl = scopes.modUtils$net.parseUrl(webEngine.getLocation())
 								callServoyMethod(parsedUrl.host, Object.getOwnPropertyNames(parsedUrl.queryKey).length != 0 ? parsedUrl.queryKey : null)
 								
-								//Canceling the loading of the url if it's a callback url. Needs to be done through Platform.runLater or else it doesn't work
+								//Canceling the loading of the url if it's a callback url. Needs to be done through Platform.runLater or else it'll crash the JVM
 								Platform.runLater(new Runnable({
 									run: function() {
 										webEngine.getLoadWorker().cancel();
@@ -311,15 +343,11 @@ function setUpWebPanel() {
 							}
 							break;
 						case State.SUCCEEDED:
+							//Re-adding the window.servoy property with the callBackClass. Needs to be everytime after the state has changed 
 							/** @type {Packages.netscape.javascript.JSObject} */
 							var window = webEngine.executeScript("window")
 							window.setMember('servoy', callBackClass)
 							//Intentional fall through
-//							webEngineReady = true;
-//							if (webEngineNotReadyCountdownLatch) {
-//								webEngineNotReadyCountdownLatch.countDown();
-//							}
-//							break;
 						case State.FAILED: //Intentional fall through
 						case State.CANCELLED:
 							webEngineReady = true;
@@ -416,7 +444,6 @@ function executeScript(code) {
 	log.debug('webEngineReady? ' + webEngineReady)
 	
 	//Prevent calling executeScript while the DOM is not ready
-	//TODO: this doesn't work right: this halts the system when calling executeScript before a load/loadContent call
 	if (!webEngineReady) {
 		log.debug('Going into waiting')
 		webEngineNotReadyCountdownLatch = new java.util.concurrent.CountDownLatch(1)
@@ -425,34 +452,31 @@ function executeScript(code) {
 	}
 	
 	var retval;
-	var latch = new java.util.concurrent.CountDownLatch(1)
 	var error = null
-	//CHECKME: Is this save? See https://forums.oracle.com/forums/thread.jspa?threadID=2537265
-	//TODO: probably needs more fail-saves, see: http://hg.openjdk.java.net/openjfx/8/master/rt/file/fc5946a10151/javafx-ui-common/src/com/sun/javafx/application/PlatformImpl.java
+	executeScriptCountdownLatch = new java.util.concurrent.CountDownLatch(1)
 	Packages.javafx.application.Platform.runLater(new java.lang.Runnable({
 		run: function() {
 			log.debug('executeScript executed: ' + code)
 			try {
 				retval = webEngine.executeScript(code)
 			} catch (e) {
-				e.stack //Touching the stack property, so it in instantiated. Dunno why this is needed...
+				e['stack'] //Touching the stack property, so it in instantiated. Dunno why this is needed...
 				error = e //Saving the error, so it can be rethrown on the Swing thread to get the correct stacktrace
 			} finally {
 				if (log.isTraceEnabled()) {
 					log.trace(getStringFromDocument(webEngine.getDocument())) //CHECKME: using log.log instead of log.info hangs the DSC and error only reported in console in Eclipse when running from source
 				}
-				latch.countDown();
+				executeScriptCountdownLatch.countDown();
 			}
 		}
 	}));
-	latch.await();
+	executeScriptCountdownLatch.await();
 	if (error) {
 		try {
 			throw error
 		} catch (e) {
 			log.error('Exception while executing script \'' + code + '\'', error)
 		}
-	//	application.output(msg)
 	}
 	return retval;
 }
@@ -477,7 +501,7 @@ function getStringFromDocument(doc)
        transformer.transform(domSource, result);
        return writer.toString();
     }
-    catch(ex)
+    catch(/** @type {Packages.org.mozilla.javascript.JavaScriptException} */ex)
     {
        ex.printStackTrace();
        return null;
