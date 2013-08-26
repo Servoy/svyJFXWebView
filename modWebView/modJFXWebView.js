@@ -16,9 +16,39 @@
  */
 
 /**
- * Creates and displays a JavaFX WebView component in the supplied container
+ * Creates and displays a JavaFX WebView component in the supplied container<br>
+ * <br>
+ * The content in the JavaFx WebView can make use of media:/// urls to access resources stored in the Servoy Media library<br>
+ * <br>
+ * From within the content of the JavaFX WebView upcalls can be made to the Servoy scripting layer in two ways:<br>
+ * 1. Through JavaScript using <i>servoy.executeMethod(methodName:String, arguments:Array<*>)</i><br>
+ * 2. Through callback url's, for example: <i>callback://{methodName}?key1=value1&key2=value2</i><br>
+ * <br>
+ * The methodName used in the upcalls can be either the name of a method on the form on which the JFXWebView is displayed or a fully qualified path to a method on a form or in a scope<br>
+ * <br>
+ * 
  * @constructor
  * @param {RuntimeTabPanel} container
+ * 
+ * @example <pre>
+ * var panel = new scopes.modJFXWebView.WebViewPanel(elements.myTablessTabPanel)
+ * panel.load('http://servoy.com')
+ * </pre>
+ *
+ * @example <pre>
+ * var panel = new scopes.modJFXWebView.WebViewPanel(elements.myTablessTabPanel)
+ * var content = {@code<html
+ * 	<body>
+ * 		<a href="callback://testCallbackUrl">callback://testCallbackUrl</a><br/>
+ * 		<a href="callback://forms.test.testCallbackUrl">callback://forms.test.testCallbackUrl</a><br/>
+ * 		<a href="callback://forms.test.testCallbackUrl?fruit=banana&amp;brand=Chiquita">callback://forms.test.testCallbackUrl?fruit=banana&brand=Chiquita</a><br/>
+ * 		<a href="#" onclick="servoy.executeMethod('forms.test.testServoyExecuteMethod')">servoy.executeMethod('forms.test.testServoyExecuteMethod')</a><br/>
+ * 		<button id="myButton" onclick="servoy.executeMethod('forms.test.testServoyExecuteMethod', ['banaan', window])">servoy.executeMethod('forms.test.testServoyExecuteMethod', ['banana', window])</button>
+ * 	</body>
+ * </html>}
+ * panel.loadContent(content.toXMLString())
+ * panel.executeScriptLater('document.getElementById('myButton').click()')
+ * </pre>
  *
  * @properties={typeid:24,uuid:"9C95D0A8-7A31-4AF6-8011-771DE24E863A"}
  */
@@ -43,12 +73,39 @@ function WebViewPanel(container) {
 	this.loadContent = function(content, contentType) {
 		forms[formName].loadContent(content, contentType)
 	}
+	
 	/**
+	 * @deprecated use {@link #executeScriptAndWait} or {@link #executeScriptLater} instead
 	 * @param {String} script
 	 * @return {*}
 	 */
 	this.executeScript = function(script) {
 		return forms[formName].executeScript(script)
+	}
+	
+	/**
+	 * Executes the supplied script in the JavaFX WebView and waits for the script to be executed and then returns the return value of the executed script<br>
+	 * <br>
+	 * If the executed script does not return anything or the returned value is not used, use {@link #executeScriptLater} instead<br>
+	 * <br>
+	 * Use with care: using this method can cause deadlocks if the script that is executed performs callbacks back to the Servoy scripting layer again using <i>servoy.executeMethod(...)</i><br>
+	 * <br>
+	 * @param {String} script
+	 * @return {*}
+	 */
+	this.executeScriptAndWait = function(script) {
+		return forms[formName].executeScriptAndWait(script)
+	}
+
+	/**
+	 * Executes the supplied script in the JavaFX WebView and returns immediately. This means that this method never returns a value<br>
+	 * <br>
+	 * If the return value of the executed script is required, use {@link #executeScriptAndWait} instead
+	 * @param {String} script
+	 * TODO: add optional callback parameter
+	 */
+	this.executeScriptLater = function(script) {
+		forms[formName].executeScriptLater(script)
 	}
 	
 	this.enableFirebug = function() {
@@ -75,7 +132,7 @@ var log = (function() {
  * @SuppressWarnings(unused)
  * @properties={typeid:35,uuid:"2C1A4FD1-06D8-40CD-BC62-7FFE638FE97E",variableType:-4}
  */
-var init = function() { 
+var init = (function() { 
 	//TODO: add check to test for JavaFX availability
 	if (scopes.modUtils$system.isSwingClient()) {
 		/*
@@ -98,9 +155,13 @@ var init = function() {
 		
 		//Using inlined code from scopes.modUtils$smartClient.unwrapElement & scopes.modUtils$smartClient.getSmartClientPluginAccess so not having to make registerURLStreamHandler a public method, since too dangerous:
 		//using registerURLStreamHandler with a Java Class that has a (partial) JavaScript implementation causes mem-leaks and errors after switching solution
-		var list = new Packages.java.util.ArrayList();
-		list.add(plugins.window);
-		var unwrappedElement = list.get(0);
-		unwrappedElement['getClientPluginAccess']().registerURLStreamHandler('callback', dummyURLStreamHandlerClass.newInstance())
+		//TODO: is this the final way to get ClientPluginAccess?
+//		var list = new Packages.java.util.ArrayList();
+//		list.add(plugins.window);
+//		var unwrappedElement = list.get(0);
+//		unwrappedElement['getClientPluginAccess']().registerURLStreamHandler('callback', dummyURLStreamHandlerClass.newInstance())
+		
+		var x = new Packages.org.mozilla.javascript.NativeJavaObject(globals, plugins.window, new Packages.org.mozilla.javascript.JavaMembers(globals, Packages.com.servoy.extensions.plugins.window.WindowProvider));
+		x['getClientPluginAccess']().registerURLStreamHandler('callback', dummyURLStreamHandlerClass.newInstance())
 	}
-}()
+}())
