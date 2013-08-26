@@ -100,10 +100,13 @@ function setUpPanel() {
 	/**
 	 * @param {String} qualifiedName
 	 * @param {*} [args]
+	 * @param {Boolean} invokeAndWait
+	 * 
 	 * @return {*} If not invoked on Swing's EDT, there will not be a return value, because that could cause deadlocks
+	 * 
 	 * @throws {scopes.modUtils$exceptions.IllegalArgumentException}
 	 */
-	function callServoyMethod(qualifiedName, args) {
+	function callServoyMethod(qualifiedName, args, invokeAndWait) {
 		log.debug('callback: ' + qualifiedName + ' (' + args + ' )' )
 		
 		function callMethod() {
@@ -115,7 +118,15 @@ function setUpPanel() {
 		if (Packages.javax.swing.SwingUtilities.isEventDispatchThread()) { //This scenario is not likely to happen
 			log.debug('Performing callback directly on Swing\'s EDT')
 			return callMethod()
-		} else if (executeScriptCountdownLatch && !executeScriptCountdownLatch.getCount()) { //To prevent deadlocks
+		} else if (!invokeAndWait || (executeScriptCountdownLatch && executeScriptCountdownLatch.getCount())) {
+			log.debug('Performing callback through SwingUtilities.invokeLater')
+			if (invokeAndwait) {
+				log.warn('Prevented deadlock! servoy.executeMethod called from JavaFX WebView in response to a call to WebViewPanel.executeScriptAndWait')
+			}
+			Packages.javax.swing.SwingUtilities.invokeLater(new Runnable({
+				run: callMethod
+			}))
+		} else {
 			log.debug('Performing callback through SwingUtilities.invokeAndWait')
 			var tmp
 			Packages.javax.swing.SwingUtilities.invokeAndWait(new Runnable({
@@ -126,13 +137,7 @@ function setUpPanel() {
 			}))
 			log.debug('Performing callback through SwingUtilities.invokeAndWait: returning: ' + JSON.stringify(tmp))
 			return tmp
-		} else {
-			log.debug('Performing callback through SwingUtilities.invokeLater')
-			log.warn('Prevented deadlock!!!!!!!!!!!')
-			Packages.javax.swing.SwingUtilities.invokeLater(new Runnable({
-				run: callMethod
-			}))
-		}
+		} 
 		return null;
 	}
 
@@ -157,11 +162,9 @@ function setUpPanel() {
 			 * 	http://java-no-makanaikata.blogspot.nl/2012/10/javafx-webview-size-trick.html
 			 * 
 			 */
-			scene = new Scene(browser) //, 200, 160
-			
 //			browser.prefWidthProperty().bind(scene.widthProperty());
 //		    browser.prefHeightProperty().bind(scene.heightProperty());
-			
+			scene = new Scene(browser) //, 200, 160
 			elements.webPanel.setScene(scene)
 			
 			if (log.isTraceEnabled()) {
@@ -255,7 +258,7 @@ function setUpPanel() {
 	}))
 	latch.await()
 	
-	if (log.isDebugEnabled()) {
+	if (log.isTraceEnabled()) {
 		elements.webPanel.addComponentListener(new java.awt.event.ComponentListener({
 			componentHidden: function(){},
 			componentMoved: function(){},
@@ -302,7 +305,7 @@ function setUpPanel() {
 							_args.push(args.getSlot(i))
 						}
 					}
-					var tmp = callServoyMethod(methodName, _args)
+					var tmp = callServoyMethod(methodName, _args, true)
 					log.debug('executeMethod returning: ' + JSON.stringify(tmp))
 					return JSON.stringify(tmp);
 				}
@@ -316,23 +319,37 @@ function setUpPanel() {
 	/*
 	 * Manage state when (re)loading content
 	 * - Cancel load if a callback:// url and execute the callback method
-	 * - When successfully loaded, register the callbackClass again for callbacks through JavaScript using servoy.executeMethod 
+	 * - When HTMLDocument changes, register the callbackClass again for callbacks through JavaScript using servoy.executeMethod 
 	 * - Set the webEngineReady flag accordingly
 	 * - Manage the webEngineNotReadyCountdownLatch accordingly
 	 */
 	Platform.runLater(new Runnable({
 		run: function() {
+			webEngine.documentProperty().addListener(new ChangeListener({
+				changed: function(ov, oldState, newState) {
+					log.debug('DocumentProperty Changed: ' + oldState + ' > ' + newState)
+					//Re-adding the window.servoy property with the callBackClass. Needs to be everytime after the state has changed 
+					/** @type {Packages.netscape.javascript.JSObject} */
+					var window = webEngine.executeScript("window")
+					window.setMember('servoy', callBackClass)
+				}
+			}))
+			
 			webEngine.getLoadWorker().stateProperty().addListener(new ChangeListener({
 				changed: function(ov, oldState, newState) {
-					log.debug('State Changed: ' + oldState + ' - ' + newState + " - " + webEngine.getLocation())
-					log.trace('State Changed scene dimensions: x=' + scene.getWidth() + ', y=' + scene.getHeight())
-					log.trace('State Changed Webview dimensions: x=' + browser.widthProperty().getValue() + ', y=' + browser.heightProperty().getValue())
+					if (log.isDebugEnabled()) {
+						log.debug('State Changed: ' + oldState + ' > ' + newState + " (location: " + webEngine.getLocation() + ")")
+					}
+					if (log.isTraceEnabled()) {
+						log.trace('State Changed scene dimensions: x=' + scene.getWidth() + ', y=' + scene.getHeight())
+						log.trace('State Changed Webview dimensions: x=' + browser.widthProperty().getValue() + ', y=' + browser.heightProperty().getValue())
+					}
 					
 					switch (newState) {
 						case State.SCHEDULED:
 							if (webEngine.getLocation().indexOf('callback://') == 0) {
 								var parsedUrl = scopes.modUtils$net.parseUrl(webEngine.getLocation())
-								callServoyMethod(parsedUrl.host, Object.getOwnPropertyNames(parsedUrl.queryKey).length != 0 ? parsedUrl.queryKey : null)
+								callServoyMethod(parsedUrl.host, Object.getOwnPropertyNames(parsedUrl.queryKey).length != 0 ? parsedUrl.queryKey : null, false)
 								
 								//Canceling the loading of the url if it's a callback url. Needs to be done through Platform.runLater or else it'll crash the JVM
 								Platform.runLater(new Runnable({
@@ -343,10 +360,10 @@ function setUpPanel() {
 							}
 							break;
 						case State.SUCCEEDED:
-							//Re-adding the window.servoy property with the callBackClass. Needs to be everytime after the state has changed 
-							/** @type {Packages.netscape.javascript.JSObject} */
-							var window = webEngine.executeScript("window")
-							window.setMember('servoy', callBackClass)
+//							//Re-adding the window.servoy property with the callBackClass. Needs to be everytime after the state has changed 
+//							/** @type {Packages.netscape.javascript.JSObject} */
+//							var window = webEngine.executeScript("window")
+//							window.setMember('servoy', callBackClass)
 							//Intentional fall through
 						case State.FAILED: //Intentional fall through
 						case State.CANCELLED:
@@ -432,6 +449,7 @@ function loadContent(content, contentType) {
 }
 
 /**
+ * @deprecated
  * @param {String} code
  *
  * @properties={typeid:24,uuid:"11B46369-01DD-42CB-AA8D-AA04A058AA69"}
@@ -479,6 +497,102 @@ function executeScript(code) {
 		}
 	}
 	return retval;
+}
+
+/**
+ * @param {String} code
+ * @return {*}
+ *
+ * @properties={typeid:24,uuid:"C15CD03C-0CCE-43B2-88E3-6BCBE0905985"}
+ */
+function executeScriptAndWait(code) {
+	if (!webEngine) {
+		return null;
+	}
+
+	log.debug('webEngineReady? ' + webEngineReady)
+	
+	//Prevent calling executeScript while the DOM is not ready
+	if (!webEngineReady) {
+		log.debug('Going into waiting')
+		webEngineNotReadyCountdownLatch = new java.util.concurrent.CountDownLatch(1)
+		webEngineNotReadyCountdownLatch.await()
+		log.debug('Resuming from wait')
+	}
+	
+	var retval;
+	var error = null
+	executeScriptCountdownLatch = new java.util.concurrent.CountDownLatch(1)
+	Packages.javafx.application.Platform.runLater(new java.lang.Runnable({
+		run: function() {
+			log.debug('executeScriptAndWait executed: ' + code)
+			try {
+				retval = webEngine.executeScript(code)
+			} catch (e) {
+				e['stack'] //Touching the stack property, so it in instantiated. Dunno why this is needed...
+				error = e //Saving the error, so it can be rethrown on the Swing thread to get the correct stacktrace
+			} finally {
+				if (log.isTraceEnabled()) {
+					log.trace(getStringFromDocument(webEngine.getDocument())) //CHECKME: using log.log instead of log.info hangs the DSC and error only reported in console in Eclipse when running from source
+				}
+				executeScriptCountdownLatch.countDown();
+			}
+		}
+	}));
+	executeScriptCountdownLatch.await();
+	if (error) {
+		try {
+			throw error
+		} catch (e) {
+			log.error('Exception while executing script \'' + code + '\'', error)
+		}
+	}
+	return retval;
+}
+
+/**
+ * @param {String} code
+ *
+ * @properties={typeid:24,uuid:"67C490FE-6906-412C-B2A9-1B07C4BE631F"}
+ */
+function executeScriptLater(code) {
+	if (!webEngine) {
+		return null;
+	}
+
+	log.debug('webEngineReady? ' + webEngineReady)
+	
+	//Prevent calling executeScript while the DOM is not ready
+	if (!webEngineReady) {
+		log.debug('Going into waiting')
+		webEngineNotReadyCountdownLatch = new java.util.concurrent.CountDownLatch(1)
+		webEngineNotReadyCountdownLatch.await()
+		log.debug('Resuming from wait')
+	}
+	
+	var error = null
+	Packages.javafx.application.Platform.runLater(new java.lang.Runnable({
+		run: function() {
+			log.debug('executeScriptLater executed: ' + code)
+			try {
+				webEngine.executeScript(code)
+			} catch (e) {
+				e['stack'] //Touching the stack property, so it in instantiated. Dunno why this is needed...
+				error = e //Saving the error, so it can be rethrown on the Swing thread to get the correct stacktrace
+			} finally {
+				if (log.isTraceEnabled()) {
+					log.trace(getStringFromDocument(webEngine.getDocument())) //CHECKME: using log.log instead of log.info hangs the DSC and error only reported in console in Eclipse when running from source
+				}
+			}
+		}
+	}));
+	if (error) {
+		try {
+			throw error
+		} catch (e) {
+			log.error('Exception while executing script \'' + code + '\'', error)
+		}
+	}
 }
 
 /**
