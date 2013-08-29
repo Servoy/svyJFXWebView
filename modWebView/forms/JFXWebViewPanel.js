@@ -78,7 +78,6 @@ var webEngineNotReadyCountdownLatch
  */
 var executeScriptCountdownLatch
 
-
 /**
  * @private
  * @properties={typeid:24,uuid:"B4DC94FB-14B9-440C-B4C4-2EFE28DA2DC2"}
@@ -110,9 +109,13 @@ function setUpPanel() {
 		log.debug('callback: ' + qualifiedName + ' (' + args + ' )' )
 		
 		function callMethod() {
-			var parentFormName = scopes.modUtils$UI.getParentFormName(forms[controller.getName()])
-			var context = parentFormName ? forms[parentFormName] : null
-			return scopes.modUtils.callServoyMethod.call(context, qualifiedName, args)
+			try {
+				var parentFormName = scopes.modUtils$UI.getParentFormName(forms[controller.getName()])
+				var context = parentFormName ? forms[parentFormName] : null
+				return scopes.modUtils.callServoyMethod.call(context, qualifiedName, args)
+			} catch (e) {
+				log.error('Error handling callback from JFXWebView back to Servoy scripting layer', e)
+			}
 		}
 		
 		if (Packages.javax.swing.SwingUtilities.isEventDispatchThread()) { //This scenario is not likely to happen
@@ -120,7 +123,7 @@ function setUpPanel() {
 			return callMethod()
 		} else if (!invokeAndWait || (executeScriptCountdownLatch && executeScriptCountdownLatch.getCount())) {
 			log.debug('Performing callback through SwingUtilities.invokeLater')
-			if (invokeAndwait) {
+			if (invokeAndWait) {
 				log.warn('Prevented deadlock! servoy.executeMethod called from JavaFX WebView in response to a call to WebViewPanel.executeScriptAndWait')
 			}
 			Packages.javax.swing.SwingUtilities.invokeLater(new Runnable({
@@ -557,7 +560,7 @@ function executeScriptAndWait(code) {
  */
 function executeScriptLater(code) {
 	if (!webEngine) {
-		return null;
+		return;
 	}
 
 	log.debug('webEngineReady? ' + webEngineReady)
@@ -626,7 +629,7 @@ function getStringFromDocument(doc)
  * @properties={typeid:24,uuid:"DEF1BBFF-C6D0-42D8-88E0-56A907BDF56A"}
  */
 function enableFirebug() {
-	executeScript("if (!document.getElementById('FirebugLite')){E = document['createElement' + 'NS'] && document.documentElement.namespaceURI;E = E ? document['createElement' + 'NS'](E, 'script') : document['createElement']('script');E['setAttribute']('id', 'FirebugLite');E['setAttribute']('src', 'https://getfirebug.com/' + 'firebug-lite.js' + '#startOpened');E['setAttribute']('FirebugLite', '4');(document['getElementsByTagName']('head')[0] || document['getElementsByTagName']('body')[0]).appendChild(E);E = new Image;E['setAttribute']('src', 'https://getfirebug.com/' + '#startOpened');}"); 
+	executeScriptLater("if (!document.getElementById('FirebugLite')){E = document['createElement' + 'NS'] && document.documentElement.namespaceURI;E = E ? document['createElement' + 'NS'](E, 'script') : document['createElement']('script');E['setAttribute']('id', 'FirebugLite');E['setAttribute']('src', 'https://getfirebug.com/' + 'firebug-lite.js' + '#startOpened');E['setAttribute']('FirebugLite', '4');(document['getElementsByTagName']('head')[0] || document['getElementsByTagName']('body')[0]).appendChild(E);E = new Image;E['setAttribute']('src', 'https://getfirebug.com/' + '#startOpened');}"); 
 }
 
 /**
@@ -639,10 +642,10 @@ function enableFirebug() {
  * @properties={typeid:24,uuid:"78F24B70-09E5-4431-B752-71357F17F714"}
  */
 function onResize(event) {
-	if (log.isDebugEnabled()) {
-		log.debug('onResize JFXWebViewPanel form resized: x=' + controller.getFormWidth() + ', y=?')
-		log.debug('onResize JFXWebViewPanel preferred sizes: x=' + browser.getPrefWidth() + ', y=' + browser.getPrefHeight())
-		log.debug('onResize scene preferred sizes: x=' + scene.widthProperty().getValue() + ', y=' + scene.heightProperty().getValue())
+	if (log.isTraceEnabled()) {
+		log.trace('onResize JFXWebViewPanel form resized: x=' + controller.getFormWidth() + ', y=?')
+		log.trace('onResize JFXWebViewPanel preferred sizes: x=' + browser.getPrefWidth() + ', y=' + browser.getPrefHeight())
+		log.trace('onResize scene preferred sizes: x=' + scene.widthProperty().getValue() + ', y=' + scene.heightProperty().getValue())
 	}
 }
 
@@ -657,8 +660,8 @@ function onResize(event) {
  * @properties={typeid:24,uuid:"70B7FC8D-75F6-4400-BD9F-21541C4C30AB"}
  */
 function onShow(firstShow, event) {
-	if (log.isDebugEnabled()) {
-		log.debug('onShow JFXWebViewPanel form dimensions: x=' + elements.webPanel.getWidth() + ', y=' + elements.webPanel.getHeight())
-		log.debug('onShow scene dimensions: x=' + elements.webPanel.scene.getWidth() + ', y=' + elements.webPanel.scene.getHeight())
+	if (log.isTraceEnabled()) {
+		log.trace('onShow JFXWebViewPanel form dimensions: x=' + elements.webPanel.getWidth() + ', y=' + elements.webPanel.getHeight())
+		log.trace('onShow scene dimensions: x=' + elements.webPanel.scene.getWidth() + ', y=' + elements.webPanel.scene.getHeight())
 	}
 }
