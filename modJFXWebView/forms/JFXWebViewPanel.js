@@ -106,7 +106,7 @@ function setUpPanel() {
 	 * @throws {scopes.modUtils$exceptions.IllegalArgumentException}
 	 */
 	function callServoyMethod(qualifiedName, args, invokeAndWait) {
-		log.debug('callback: ' + qualifiedName + ' (' + args + ' )' )
+		log.debug('callback: ' + qualifiedName + ' (' + JSON.stringify(args) + ' )' )
 		
 		function callMethod() {
 			try {
@@ -116,6 +116,7 @@ function setUpPanel() {
 			} catch (e) {
 				log.error('Error handling callback from JFXWebView back to Servoy scripting layer', e)
 			}
+			return null
 		}
 		
 		if (Packages.javax.swing.SwingUtilities.isEventDispatchThread()) { //This scenario is not likely to happen
