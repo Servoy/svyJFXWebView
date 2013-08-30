@@ -18,6 +18,12 @@
 /**
  * Creates and displays a JavaFX WebView component in the supplied container<br>
  * <br>
+ * This component depends on the availability of JavaFX, which must be made available in Smart Clients by setting the property <i>servoy.client.javafx</i> to true through the Admin pages<br>
+ * <br>
+ * JavaFX comes pre-installed with Java 7 update 6 or higher. 
+ * On Java 7 < update 6 the user gets prompted when starting the Smart Client to install JavaFX if JavaFX is not yet installed
+ * On Java 6 JavaFX must be manually installed and is only available on Windows<br>
+ * <br>
  * The content in the JavaFx WebView can make use of media:/// urls to access resources stored in the Servoy Media library<br>
  * <br>
  * From within the content of the JavaFX WebView upcalls can be made to the Servoy scripting layer in two ways:<br>
@@ -53,9 +59,10 @@
  * @properties={typeid:24,uuid:"9C95D0A8-7A31-4AF6-8011-771DE24E863A"}
  */
 function WebViewPanel(container) {
+	//TODO: API needs to be disabled when JFX is not available
 	var formName = application.getUUID().toString()
 	application.createNewFormInstance("JFXWebViewPanel", formName)
-
+	
 	container.removeAllTabs()
 	container.addTab(forms[formName])
 
@@ -72,15 +79,6 @@ function WebViewPanel(container) {
 	 */
 	this.loadContent = function(content, contentType) {
 		forms[formName].loadContent(content, contentType)
-	}
-	
-	/**
-	 * @deprecated use {@link #executeScriptAndWait} or {@link #executeScriptLater} instead
-	 * @param {String} script
-	 * @return {*}
-	 */
-	this.executeScript = function(script) {
-		return forms[formName].executeScript(script)
 	}
 	
 	/**
