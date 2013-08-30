@@ -139,7 +139,6 @@ function setUpPanel() {
 					tmp = callMethod()
 				}
 			}))
-			log.debug('Performing callback through SwingUtilities.invokeAndWait: returning: ' + JSON.stringify(tmp))
 			return tmp
 		} 
 		return null;
