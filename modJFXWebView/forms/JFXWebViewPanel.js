@@ -293,7 +293,34 @@ function setUpPanel() {
 		cx.setApplicationClassLoader(mediaCL)	
 		/** @type {Packages} */
 		var MediaPackages = new Packages(mediaCL); //See http://osdir.com/ml/mozilla.devel.jseng/2002-06/msg00037.html
-						
+			
+		/**
+		 * TODO: might need a recursion depth limit to prevent endless loops when sending in the windows object for example as object
+		 * @param {Packages.netscape.javascript.JSObject|*} o
+		 */
+		function unwrapJSObject(o) {
+			if (o instanceof Packages.netscape.javascript.JSObject) {
+				var retval
+				if (o.getMember('length') instanceof Number) { //Must be an Array
+					retval = []
+					for (var i = 0, l = o.getMember('length'); i < l; i++) {
+						retval.push(unwrapJSObject(o.getSlot(i)))
+					}
+				} else { //must be an object
+					retval = {}
+					/** @type {Packages.netscape.javascript.JSObject} */
+					var keys = o.eval("Object.keys(this)")
+					for (i = 0, l = keys.getMember('length'); i < l; i++) {
+						/** @type {String} */
+						var key = keys.getSlot(i)
+						retval[key] = unwrapJSObject(o.getMember(key))
+					}
+				}
+				return retval
+			}
+			return o
+		}
+		
 		//Setup the bridge to allow upcalls from the JavaScript inside the WebEngine and Servoy
 		//Using custom Java class here for the bridge between the WebEngine and Servoy's scripting layer, in order to have control over the argument types of the Java Methods
 		var callBackClass = new MediaPackages.com.servoy.bap.webpane.WebPaneScriptBridge({ //Packages.com.servoy.bap.webpane.WebPaneScriptBridge is custom Java class stored in the media://bin/ dir
@@ -302,14 +329,7 @@ function setUpPanel() {
 				 * @param {Packages.netscape.javascript.JSObject} args
 				 */
 				executeMethod: function(methodName, args) {
-					var _args = []
-					if (args) {
-						//FIXME: getMember needs to be called recursivly, also on nested Arrays and Objects
-						for (var i = 0; i < args.getMember('length'); i++) {
-							_args.push(args.getSlot(i))
-						}
-					}
-					var tmp = callServoyMethod(methodName, _args, true)
+					var tmp = callServoyMethod(methodName, unwrapJSObject(args), true)
 					log.debug('executeMethod returning: ' + JSON.stringify(tmp))
 					return JSON.stringify(tmp);
 				}
