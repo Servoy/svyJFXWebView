@@ -466,57 +466,6 @@ function loadContent(content, contentType) {
 }
 
 /**
- * @deprecated
- * @param {String} code
- *
- * @properties={typeid:24,uuid:"11B46369-01DD-42CB-AA8D-AA04A058AA69"}
- */
-function executeScript(code) {
-	if (!webEngine) {
-		return null;
-	}
-
-	log.debug('webEngineReady? ' + webEngineReady)
-	
-	//Prevent calling executeScript while the DOM is not ready
-	if (!webEngineReady) {
-		log.debug('Going into waiting')
-		webEngineNotReadyCountdownLatch = new java.util.concurrent.CountDownLatch(1)
-		webEngineNotReadyCountdownLatch.await()
-		log.debug('Resuming from wait')
-	}
-	
-	var retval;
-	var error = null
-	executeScriptCountdownLatch = new java.util.concurrent.CountDownLatch(1)
-	Packages.javafx.application.Platform.runLater(new java.lang.Runnable({
-		run: function() {
-			log.debug('executeScript executed: ' + code)
-			try {
-				retval = webEngine.executeScript(code)
-			} catch (e) {
-				e['stack'] //Touching the stack property, so it in instantiated. Dunno why this is needed...
-				error = e //Saving the error, so it can be rethrown on the Swing thread to get the correct stacktrace
-			} finally {
-				if (log.isTraceEnabled()) {
-					log.trace(getStringFromDocument(webEngine.getDocument())) //CHECKME: using log.log instead of log.info hangs the DSC and error only reported in console in Eclipse when running from source
-				}
-				executeScriptCountdownLatch.countDown();
-			}
-		}
-	}));
-	executeScriptCountdownLatch.await();
-	if (error) {
-		try {
-			throw error
-		} catch (e) {
-			log.error('Exception while executing script \'' + code + '\'', error)
-		}
-	}
-	return retval;
-}
-
-/**
  * @param {String} code
  * @return {*}
  *
