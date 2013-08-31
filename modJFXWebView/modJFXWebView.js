@@ -59,7 +59,20 @@
  * @properties={typeid:24,uuid:"9C95D0A8-7A31-4AF6-8011-771DE24E863A"}
  */
 function WebViewPanel(container) {
-	//TODO: API needs to be disabled when JFX is not available
+	if (!mustInitialize()) {
+		log.warn('Attempting to use modWebView whith JavaFX is not available (Java version: ' + Packages.java.lang.System.getProperty("java.version") + ')')
+		var dummy = function(){
+			log.warn('Attempting to use modWebView whith JavaFX is not available (Java version: ' + Packages.java.lang.System.getProperty("java.version") + ')')
+		}
+		return {
+			load: dummy,
+			loadContent: dummy,
+			executeScriptAndWait: dummy,
+			executeScriptLater: dummy,
+			enableFirebug: dummy
+		}
+	}
+	
 	var formName = application.getUUID().toString()
 	application.createNewFormInstance("JFXWebViewPanel", formName)
 	
@@ -131,8 +144,7 @@ var log = (function() {
  * @properties={typeid:35,uuid:"2C1A4FD1-06D8-40CD-BC62-7FFE638FE97E",variableType:-4}
  */
 var init = (function() { 
-	//TODO: add check to test for JavaFX availability
-	if (scopes.modUtils$system.isSwingClient()) {
+	if (mustInitialize()) {
 		/*
 		 * Registering a URLStreamHandler for the 'callback://' protocol, to be used from within HTML inside JFXWebView to do callbacks to Servoy's JavaScript layer based on URL's 
 		 * 
@@ -151,15 +163,18 @@ var init = (function() {
 		
 		var dummyURLStreamHandlerClass = java.lang.Class.forName("com.servoy.bap.webpane.DummyURLStreamHandler", false, customCL)
 		
-		//Using inlined code from scopes.modUtils$smartClient.unwrapElement & scopes.modUtils$smartClient.getSmartClientPluginAccess so not having to make registerURLStreamHandler a public method, since too dangerous:
+		//Using inlined code from scopes.modUtils$smartClient.getSmartClientPluginAccess so not having to make registerURLStreamHandler a public method, since too dangerous:
 		//using registerURLStreamHandler with a Java Class that has a (partial) JavaScript implementation causes mem-leaks and errors after switching solution
-		//TODO: is this the final way to get ClientPluginAccess?
-//		var list = new Packages.java.util.ArrayList();
-//		list.add(plugins.window);
-//		var unwrappedElement = list.get(0);
-//		unwrappedElement['getClientPluginAccess']().registerURLStreamHandler('callback', dummyURLStreamHandlerClass.newInstance())
-		
+		//CHECKME: is this the final way to get ClientPluginAccess?		
 		var x = new Packages.org.mozilla.javascript.NativeJavaObject(globals, plugins.window, new Packages.org.mozilla.javascript.JavaMembers(globals, Packages.com.servoy.extensions.plugins.window.WindowProvider));
 		x['getClientPluginAccess']().registerURLStreamHandler('callback', dummyURLStreamHandlerClass.newInstance())
 	}
 }())
+
+/**
+ * @private 
+ * @properties={typeid:24,uuid:"329F719F-75D6-416E-94D9-0A01EBC6E476"}
+ */
+function mustInitialize() {
+	return scopes.modUtils$system.isSwingClient() &&  typeof Packages.javafx.scene.web.WebView == 'function'
+}

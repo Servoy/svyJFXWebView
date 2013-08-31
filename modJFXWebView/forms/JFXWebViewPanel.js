@@ -83,13 +83,6 @@ var executeScriptCountdownLatch
  * @properties={typeid:24,uuid:"B4DC94FB-14B9-440C-B4C4-2EFE28DA2DC2"}
  */
 function setUpPanel() {
-	//TODO: check why an error in WC w/o !elements.webPanel check
-	if (!scopes.modUtils$system.isSwingClient() || !elements.webPanel.isJavaFXAvailable()) {
-		elements.webPanel.visible = false
-		log.warn('Attempting to use modWebView whith JavaFX is not available (Java version: ' + Packages.java.lang.System.getProperty("java.version") + ')')
-		return;
-	}
-	
 	/**
 	 * @param {String} qualifiedName
 	 * @param {*} [args]
@@ -324,7 +317,7 @@ function setUpPanel() {
 				executeMethod: function(methodName, args) {
 					var tmp = callServoyMethod(methodName, unwrapJSObject(args), true)
 					log.debug('executeMethod returning: ' + JSON.stringify(tmp))
-					return JSON.stringify(tmp);
+					return JSON.stringify(tmp); //CHECKME: Should we stringify here or is that up to the called method?
 				}
 			})
 	} catch (e) {
