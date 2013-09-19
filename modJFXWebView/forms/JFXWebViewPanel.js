@@ -99,7 +99,7 @@ function setUpPanel() {
 			try {
 				var parentFormName = scopes.modUtils$UI.getParentFormName(forms[controller.getName()])
 				var context = parentFormName ? forms[parentFormName] : null
-				return scopes.modUtils.callServoyMethod.call(context, qualifiedName, args)
+				return scopes.modUtils.callMethod.call(context, qualifiedName, args)
 			} catch (e) {
 				log.error('Error handling callback from JFXWebView back to Servoy scripting layer', e)
 			}
