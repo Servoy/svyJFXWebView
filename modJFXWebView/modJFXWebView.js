@@ -60,9 +60,9 @@
  */
 function WebViewPanel(container) {
 	if (!mustInitialize()) {
-		log.warn('Attempting to use modWebView whith JavaFX is not available (Java version: ' + Packages.java.lang.System.getProperty("java.version") + ')')
+		log.warn('Attempting to use modWebView when JavaFX is not available (Java version: ' + Packages.java.lang.System.getProperty("java.version") + ')')
 		var dummy = function(){
-			log.warn('Attempting to use modWebView whith JavaFX is not available (Java version: ' + Packages.java.lang.System.getProperty("java.version") + ')')
+			log.warn('Attempting to use modWebView when JavaFX is not available (Java version: ' + Packages.java.lang.System.getProperty("java.version") + ')')
 		}
 		return {
 			load: dummy,
@@ -176,5 +176,5 @@ var init = (function() {
  * @properties={typeid:24,uuid:"329F719F-75D6-416E-94D9-0A01EBC6E476"}
  */
 function mustInitialize() {
-	return scopes.modUtils$system.isSwingClient() &&  typeof Packages.javafx.scene.web.WebView == 'function'
+	return scopes.modUtils$system.isSwingClient() && typeof Packages.javafx.scene.web.WebView == 'function'
 }
