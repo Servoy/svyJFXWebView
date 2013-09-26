@@ -32,6 +32,11 @@
  * <br>
  * The methodName used in the upcalls can be either the name of a method on the form on which the JFXWebView is displayed or a fully qualified path to a method on a form or in a scope<br>
  * <br>
+ * Known issues:<br>
+ * <ul>
+ * <li>Loading websites that require (basic http) authentication will result in a login dialog popup, regardless if the username/password are passed in through the URL</li>
+ * <li>After being loaded a first time, JS & CSS are cached for the duration of JVM session. Especially in Servoy Developer this is cumbersome, as it requires restarting Servoy Developer to test changes</li>
+ * </ul>
  * 
  * @constructor
  * @param {RuntimeTabPanel} container
