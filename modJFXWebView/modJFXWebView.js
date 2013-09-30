@@ -35,7 +35,7 @@
  * Known issues:<br>
  * <ul>
  * <li>Loading websites that require (basic http) authentication will result in a login dialog popup, regardless if the username/password are passed in through the URL</li>
- * <li>After being loaded a first time, JS & CSS are cached for the duration of JVM session. Especially in Servoy Developer this is cumbersome, as it requires restarting Servoy Developer to test changes</li>
+ * <li>=< Servoy 7.4: After being loaded a first time, JS & CSS are cached for the duration of JVM session. Especially in Servoy Developer this is cumbersome, as it requires restarting Servoy Developer to test changes</li>
  * </ul>
  * 
  * @constructor
