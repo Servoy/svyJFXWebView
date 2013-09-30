@@ -19,8 +19,9 @@
  * See: http://docs.oracle.com/javafx/2/api/javafx/scene/web/WebEngine.html
  * 
  * TODO: add authentication support: 
- * - https://forums.oracle.com/thread/2347310 Need to subclass Authenticator and call static Authenticator.setDefault(authenticator) http://docs.oracle.com/javase/6/docs/api/java/net/Authenticator.html
+ * - https://javafx-jira.kenai.com/browse/RT-12023 Need to subclass Authenticator and call static Authenticator.setDefault(authenticator)
  * - testsite: http://test.webdav.org/
+ * - More Java info: https://forums.oracle.com/thread/2347310, http://docs.oracle.com/javase/7/docs/technotes/guides/net/http-auth.html, http://docs.oracle.com/javase/6/docs/api/java/net/Authenticator.html
  * TODO: add support to handle right-clicks
  */
 
