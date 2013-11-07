@@ -15,6 +15,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+ /**
+  * @private
+  * @properties={typeid:35,uuid:"D01B2F1E-047D-4A93-BB4C-00DED8AEAD6A",variableType:-4}
+  */
+ var log = scopes.modUtils$log.getLogger('com.servoy.bap.components.webpanel')
+
 /**
  * Creates and displays a JavaFX WebView component in the supplied container<br>
  * <br>
@@ -24,11 +30,11 @@
  * On Java 7 < update 6 the user gets prompted when starting the Smart Client to install JavaFX if JavaFX is not yet installed
  * On Java 6 JavaFX must be manually installed and is only available on Windows<br>
  * <br>
- * The content in the JavaFx WebView can make use of media:/// urls to access resources stored in the Servoy Media library<br>
+ * The content in the JavaFX WebView can make use of media:/// urls to access resources stored in the Servoy Media library<br>
  * <br>
  * From within the content of the JavaFX WebView upcalls can be made to the Servoy scripting layer in two ways:<br>
  * 1. Through JavaScript using <i>servoy.executeMethod(methodName:String, arguments:Array<*>)</i><br>
- * 2. Through callback url's, for example: <i>callback://{methodName}?key1=value1&key2=value2</i><br>
+ * 2. Through callback url's, for example: <i>callback://{methodName}?key1=value1&key2=value2</i>. Note that XHTTPRequests using url's using the callback:// protocol are not supported due to CORS restrictions<br>
  * <br>
  * The methodName used in the upcalls can be either the name of a method on the form on which the JFXWebView is displayed or a fully qualified path to a method on a form or in a scope<br>
  * <br>
@@ -65,9 +71,9 @@
  */
 function WebViewPanel(container) {
 	if (!mustInitialize()) {
-		log.warn('Attempting to use modWebView when JavaFX is not available (Java version: ' + Packages.java.lang.System.getProperty("java.version") + ')')
+		log.warn('Attempting to use modJFXWebView when JavaFX is not available (Java version: ' + Packages.java.lang.System.getProperty("java.version") + ')')
 		var dummy = function(){
-			log.warn('Attempting to use modWebView when JavaFX is not available (Java version: ' + Packages.java.lang.System.getProperty("java.version") + ')')
+			log.warn('Attempting to use modJFXWebView when JavaFX is not available (Java version: ' + Packages.java.lang.System.getProperty("java.version") + ')')
 		}
 		return {
 			load: dummy,
@@ -128,20 +134,6 @@ function WebViewPanel(container) {
 		forms[formName].enableFirebug()
 	}
 }
-
-/**
- * @protected 
- * @type {scopes.modUtils$log.Logger}
- * @properties={typeid:35,uuid:"D01B2F1E-047D-4A93-BB4C-00DED8AEAD6A",variableType:-4}
- */
-var log = (function() {
-		var logger = scopes.modUtils$log.getLogger('com.servoy.bap.components.webpanel')
-		
-		//TODO: in this logger we'd like to also log the Java thread (java.lang.Thread.currentThread().getName())
-		
-		logger.setLevel(scopes.modUtils$log.Level.DEBUG) //TODO: Level.ALL doesn't work properly
-		return logger
-	}())
 
 /**
  * @private 
