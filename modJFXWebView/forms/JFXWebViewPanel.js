@@ -30,7 +30,13 @@
  * @type {scopes.modUtils$log.Logger}
  * @properties={typeid:35,uuid:"5DBA7CA5-3CD8-4D42-91B1-3834E7CBCFC1",variableType:-4}
  */
-var log = scopes.modJFXWebView['log']
+var log = scopes.modUtils$log.getLogger('com.servoy.bap.components.webpanel')
+
+/**
+ * @private 
+ * @properties={typeid:35,uuid:"5B36AB35-123F-4648-A7E7-9C36DDC2CFD0",variableType:-4}
+ */
+var consoleLog = scopes.modUtils$log.getLogger('com.servoy.bap.components.webpanel.console')
 
 /**
  * @private
@@ -101,7 +107,7 @@ function setUpPanel() {
 			try {
 				var parentFormName = scopes.modUtils$UI.getParentFormName(forms[controller.getName()])
 				var context = parentFormName ? forms[parentFormName] : null
-				return scopes.modUtils.callMethod.call(context, qualifiedName, args)
+				return scopes.modUtils.callMethod(qualifiedName, args, context)
 			} catch (e) {
 				log.error('Error handling callback from JFXWebView back to Servoy scripting layer', e)
 			}
@@ -145,107 +151,111 @@ function setUpPanel() {
 	//Setup the UI for the JFXWebViewPanel
 	Platform.runLater(new Runnable({
 		run: function() {
-			//TODO: add transparent background support when implemented, see https://javafx-jira.kenai.com/browse/RT-25004
-			browser = new WebView();
-			webEngine = browser.getEngine();
-			
-			/*
-			 * Proper sizing is tricky:
-			 * 	http://java-no-makanaikata.blogspot.nl/2012/10/javafx-webview-size-trick.html
-			 * 
-			 */
-//			browser.prefWidthProperty().bind(scene.widthProperty());
-//		    browser.prefHeightProperty().bind(scene.heightProperty());
-			scene = new Scene(browser) //, 200, 160
-			elements.webPanel.setScene(scene)
-			
-			if (log.isTraceEnabled()) {
-				webEngine.setOnResized(new Packages.javafx.event.EventHandler({
-					handle: function(evt){
-						log.trace('Webengine resized: ' + evt)
-					}
-				}))
-			}
-			
-			if (application.isInDeveloper() || log.isDebugEnabled()) {
-				//Hook into WebEngine Debugging impl to log exceptions that happen in the page loaded into the WebPane
-				//WebPane exposes messageing interface that sends messages back and fort according to the Webkit Remote Debugging Protocol: https://developers.google.com/chrome-developer-tools/docs/protocol/1.0/console
-				var debuggerCallback = new Packages.javafx.util.Callback({
-					call: function(message) {
-						/** @type {{method: String,
-						 * 		params: {
-						 * 			message: {
-						 * 				text: String,
-						 * 				level: String,
-						 * 				stackTrace: Array<{
-						 * 					url: String,
-						 * 					lineNumber: Number,
-						 * 					functionName: String
-						 * 				}>
-						 * 			}		
-						 * 		}
-						 * }}
-						 */
-						var messageObject = JSON.parse(message)
-						switch (messageObject.method) {
-							case 'Console.messageAdded':
-								var output = 'JFXWebViewPanel console: ' + messageObject.params.message.text
-								switch (messageObject.params.message.level) {
-									case 'error':
-										if (messageObject.params.message.stackTrace) {
-											var first = true
-											for each (var callFrame in messageObject.params.message.stackTrace) {
-												output += first ? ' ' : '\n\tat '
-												output += callFrame.url + ':' + callFrame.lineNumber + ' (' + callFrame.functionName + ')'
-												first = false
-											}
-										}
-										log.error(output)
-										break;
-									case 'debug':
-										log.debug(output)
-										break;
-									case 'warning':
-										log.warn(output)
-										break;
-									case 'log': //Intentional fallthrough
-									case 'tip': //Intentional fallthrough
-									default:
-										log.info(output)
-										break;
-								}
-								break;
-							
-							default:
-								break;
-						}
-						if (log.isTraceEnabled()) {
-							log.trace('JFXWebViewPanel form dimensions: x=' + controller.getFormWidth() + ', y=?')
-							log.trace('JFXPanel bean dimensions: x=' + elements.webPanel.getWidth() + ', y=' + elements.webPanel.getHeight())
-							//TODO: this raises errors in the log that getwidth is know known...................
-							log.trace('scene dimensions: x=' + elements.webPanel.scene.getWidth() + ', y=' + elements.webPanel.scene.getHeight())
-							log.trace('Webview dimensions: x=' + browser.widthProperty().getValue() + ', y=' + browser.heightProperty().getValue())
-						}
-					}
-				})
+			try {
+				//TODO: add transparent background support when implemented, see https://javafx-jira.kenai.com/browse/RT-25004
+				browser = new WebView();
+				webEngine = browser.getEngine();
 				
-				//Enable the debugger for the Console part only
-				webEngine.impl_getDebugger().setMessageCallback(debuggerCallback)
-				webEngine.impl_getDebugger().setEnabled(true)
-				webEngine.impl_getDebugger().sendMessage(JSON.stringify({
-					"id": 1,
-					"method": "Console.enable"
-				}))
-			}	
+				/*
+				 * Proper sizing is tricky:
+				 * 	http://java-no-makanaikata.blogspot.nl/2012/10/javafx-webview-size-trick.html
+				 * 
+				 */
+	//			browser.prefWidthProperty().bind(scene.widthProperty());
+	//		    browser.prefHeightProperty().bind(scene.heightProperty());
+				scene = new Scene(browser) //, 200, 160
+				elements.webPanel.setScene(scene)
 				
-			//Logging of load exceptions
-			webEngine.getLoadWorker().exceptionProperty().addListener(new ChangeListener({
-				changed: function(observableValue, oldThrowable, newThrowable) {
-					log.error('Exception loading', newThrowable)
+				if (log.isTraceEnabled()) {
+					webEngine.setOnResized(new Packages.javafx.event.EventHandler({
+						handle: function(evt){
+							log.trace('Webengine resized: ' + evt)
+						}
+					}))
 				}
-			}))
-			
-			latch.countDown()
+				
+				if (application.isInDeveloper() || log.isDebugEnabled()) {
+					//Hook into WebEngine Debugging impl to log exceptions that happen in the page loaded into the WebPane
+					//WebPane exposes messageing interface that sends messages back and fort according to the Webkit Remote Debugging Protocol: https://developers.google.com/chrome-developer-tools/docs/protocol/1.0/console
+					var debuggerCallback = new Packages.javafx.util.Callback({
+						call: function(message) {
+							/** @type {{method: String,
+							 * 		params: {
+							 * 			message: {
+							 * 				text: String,
+							 * 				level: String,
+							 * 				stackTrace: Array<{
+							 * 					url: String,
+							 * 					lineNumber: Number,
+							 * 					functionName: String
+							 * 				}>
+							 * 			}		
+							 * 		}
+							 * }}
+							 */
+							var messageObject = JSON.parse(message)
+							switch (messageObject.method) {
+								case 'Console.messageAdded':
+									var output = messageObject.params.message.text
+									switch (messageObject.params.message.level) {
+										case 'error':
+											if (messageObject.params.message.stackTrace) {
+												var first = true
+												for each (var callFrame in messageObject.params.message.stackTrace) {
+													output += first ? ' ' : '\n\tat '
+													output += callFrame.url + ':' + callFrame.lineNumber + ' (' + callFrame.functionName + ')'
+													first = false
+												}
+											}
+											consoleLog.error(output)
+											break;
+										case 'debug':
+											consoleLog.debug(output)
+											break;
+										case 'warning':
+											consoleLog.warn(output)
+											break;
+										case 'log': //Intentional fallthrough
+										case 'tip': //Intentional fallthrough
+										default:
+											consoleLog.info(output)
+											break;
+									}
+									break;
+								
+								default:
+									break;
+							}
+							if (log.isTraceEnabled()) {
+								log.trace('JFXWebViewPanel form dimensions: x=' + controller.getFormWidth() + ', y=?')
+								log.trace('JFXPanel bean dimensions: x=' + elements.webPanel.getWidth() + ', y=' + elements.webPanel.getHeight())
+								//TODO: this raises errors in the log that getwidth is know known...................
+								log.trace('scene dimensions: x=' + elements.webPanel.scene.getWidth() + ', y=' + elements.webPanel.scene.getHeight())
+								log.trace('Webview dimensions: x=' + browser.widthProperty().getValue() + ', y=' + browser.heightProperty().getValue())
+							}
+						}
+					})
+					
+					//Enable the debugger for the Console part only
+					webEngine.impl_getDebugger().setMessageCallback(debuggerCallback)
+					webEngine.impl_getDebugger().setEnabled(true)
+					webEngine.impl_getDebugger().sendMessage(JSON.stringify({
+						"id": 1,
+						"method": "Console.enable"
+					}))
+				}	
+					
+				//Logging of load exceptions
+				webEngine.getLoadWorker().exceptionProperty().addListener(new ChangeListener({
+					changed: function(observableValue, oldThrowable, newThrowable) {
+						log.error('Exception loading', newThrowable)
+					}
+				}))
+			} catch (e) {
+				// TODO: handle exception
+			} finally {
+				latch.countDown()
+			}
 		}
 	}))
 	latch.await()
@@ -471,11 +481,9 @@ function executeScriptAndWait(code) {
 		return null;
 	}
 
-	log.debug('webEngineReady? ' + webEngineReady)
-	
 	//Prevent calling executeScript while the DOM is not ready
 	if (!webEngineReady) {
-		log.debug('Going into waiting')
+		log.debug('WebEngine not ready, going into waiting')
 		webEngineNotReadyCountdownLatch = new java.util.concurrent.CountDownLatch(1)
 		webEngineNotReadyCountdownLatch.await()
 		log.debug('Resuming from wait')
@@ -496,8 +504,8 @@ function executeScriptAndWait(code) {
 				if (log.isTraceEnabled()) {
 					log.trace(getStringFromDocument(webEngine.getDocument())) //CHECKME: using log.log instead of log.info hangs the DSC and error only reported in console in Eclipse when running from source
 				}
-				executeScriptCountdownLatch.countDown();
 			}
+			executeScriptCountdownLatch.countDown();
 		}
 	}));
 	executeScriptCountdownLatch.await();
