@@ -321,7 +321,7 @@ function setUpPanel() {
 		
 		//Setup the bridge to allow upcalls from the JavaScript inside the WebEngine and Servoy
 		//Using custom Java class here for the bridge between the WebEngine and Servoy's scripting layer, in order to have control over the argument types of the Java Methods
-		var callBackClass = new MediaPackages.com.servoy.bap.webpane.WebPaneScriptBridge({ //Packages.com.servoy.bap.webpane.WebPaneScriptBridge is custom Java class stored in the media://bin/ dir
+		var callBackClass = new MediaPackages['com'].servoy.bap.webpane.WebPaneScriptBridge({ //Packages.com.servoy.bap.webpane.WebPaneScriptBridge is custom Java class stored in the media://bin/ dir
 				/**
 				 * @param {String} methodName
 				 * @param {Packages.netscape.javascript.JSObject} args
