@@ -1,3 +1,20 @@
+/*
+ * This file is part of the Servoy Business Application Platform, Copyright (C) 2012-2013 Servoy BV 
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 /**
  * @type {Object}
  *
@@ -5,11 +22,10 @@
  */
 var webPanel
 
-
 /**
  * @type {String}
  *
- * @properties={typeid:35,uuid:"96555A9A-76A2-487D-8CAD-EA74CDBA4AE2"}
+ * @properties={typeid:35,uuid:"1042F2C9-6E29-455E-B118-19423223C64D"}
  */
 var url
 
@@ -72,15 +88,15 @@ function testJFXWebViewWebPanel() {
 
 	application.output('Executing Link click')
 	//Test callback:// url handling
-	webPanel.executeScript('var evt = document.createEvent("MouseEvents"); evt.initEvent("click",true,true); document.getElementById("lnk").dispatchEvent(evt)')
+	webPanel.executeScriptLater('var evt = document.createEvent("MouseEvents"); evt.initEvent("click",true,true); document.getElementById("lnk").dispatchEvent(evt)')
 
 	application.output('Executing bUTTON click')
 	//Test servoy.executeMethod(methodName, args) upcall
-	webPanel.executeScript('document.getElementById("btn").click()')
+	webPanel.executeScriptLater('document.getElementById("btn").click()')
 }
 
 /**
- * \@properties={typeid:24,uuid:"1A53D93A-A0CE-464C-BD67-5D50903771FD"}
+ * @properties={typeid:24,uuid:"1A53D93A-A0CE-464C-BD67-5D50903771FD"}
  */
 function testCallbackUrl(isExecuteMethodCall) {
 	var logMessage = "testCallbackUrl called with " + arguments.length + " arguments"
