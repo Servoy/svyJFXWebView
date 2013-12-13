@@ -97,7 +97,7 @@ function setUpPanel() {
 	 * 
 	 * @return {*} If not invoked on Swing's EDT, there will not be a return value, because that could cause deadlocks
 	 * 
-	 * @throws {scopes.modUtils$exceptions.IllegalArgumentException}
+	 * @throws {scopes.svyExceptions.IllegalArgumentException}
 	 */
 	function callServoyMethod(qualifiedName, args, invokeAndWait) {
 		log.debug('callback: ' + qualifiedName + ' (' + JSON.stringify(args) + ' )' )
