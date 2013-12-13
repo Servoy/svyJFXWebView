@@ -369,7 +369,7 @@ function setUpPanel() {
 					switch (newState) {
 						case State.SCHEDULED:
 							if (webEngine.getLocation().indexOf('callback://') == 0) {
-								var parsedUrl = scopes.modUtils$net.parseUrl(webEngine.getLocation())
+								var parsedUrl = scopes.svyNet.parseUrl(webEngine.getLocation())
 								callServoyMethod(parsedUrl.host, Object.getOwnPropertyNames(parsedUrl.queryKey).length != 0 ? parsedUrl.queryKey : null, false)
 								
 								//Canceling the loading of the url if it's a callback url. Needs to be done through Platform.runLater or else it'll crash the JVM
