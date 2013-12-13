@@ -160,9 +160,8 @@ var init = (function() {
 		
 		var dummyURLStreamHandlerClass = java.lang.Class.forName("com.servoy.bap.webpane.DummyURLStreamHandler", false, customCL)
 		
-		//Using inlined code from scopes.modUtils$smartClient.getSmartClientPluginAccess so not having to make registerURLStreamHandler a public method, since too dangerous:
+		//Using inlined code from scopes.svySmartClientUtils.getSmartClientPluginAccess so not having to make registerURLStreamHandler a public method, since too dangerous:
 		//using registerURLStreamHandler with a Java Class that has a (partial) JavaScript implementation causes mem-leaks and errors after switching solution
-		//CHECKME: is this the final way to get ClientPluginAccess?		
 		var x = new Packages.org.mozilla.javascript.NativeJavaObject(globals, plugins.window, new Packages.org.mozilla.javascript.JavaMembers(globals, Packages.com.servoy.extensions.plugins.window.WindowProvider));
 		x['getClientPluginAccess']().registerURLStreamHandler('callback', dummyURLStreamHandlerClass.newInstance())
 	}
