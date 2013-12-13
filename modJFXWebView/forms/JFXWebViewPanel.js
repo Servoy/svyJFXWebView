@@ -106,7 +106,7 @@ function setUpPanel() {
 			try {
 				var parentFormName = scopes.svyUI.getParentFormName(forms[controller.getName()])
 				var context = parentFormName ? forms[parentFormName] : null
-				return scopes.modUtils.callMethod(qualifiedName, args, context)
+				return scopes.svyUtils.callMethod(qualifiedName, args, context)
 			} catch (e) {
 				log.error('Error handling callback from JFXWebView back to Servoy scripting layer', e)
 			}
