@@ -1,6 +1,6 @@
-fileVersion:43,
+fileVersion:44,
 mustAuthenticate:false,
-name:"modWebView_test",
+name:"svyJFXWebView_test",
 solutionType:1,
 typeid:43,
 uuid:"62DC21D9-931F-4D8D-9464-337F47FA8633"

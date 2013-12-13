@@ -50,7 +50,7 @@ typeid:4,
 uuid:"E0098B34-0445-47F1-866A-E8A3C9466B51"
 }
 ],
-name:"testModWebView",
+name:"testSvyJFXWebView",
 navigatorID:"-1",
 onLoadMethodID:"2335A750-E4EC-4050-92D8-4FA60759D279",
 showInMenu:true,

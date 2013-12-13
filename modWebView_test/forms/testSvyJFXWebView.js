@@ -39,7 +39,7 @@ var url
  * @properties={typeid:24,uuid:"2335A750-E4EC-4050-92D8-4FA60759D279"}
  */
 function onLoad(event) {
-	webPanel = new scopes.modJFXWebView.WebViewPanel(elements.tabless)
+	webPanel = new scopes.svyJFXWebView.WebViewPanel(elements.tabless)
 }
 
 /**
@@ -55,7 +55,7 @@ function onAction(event) {
 	/** @type {RuntimeTextField} */
 	var el = event.getSource()
 	var urlToLoad = controller.getDataProviderValue(el.getDataProviderID())
-	var parsedUrl = scopes.modUtils$net.parseUrl(urlToLoad)
+	var parsedUrl = scopes.svyNet.parseUrl(urlToLoad)
 	
 	//Tried to make the location bar Google search bar as well, but not yet working
 	application.output('URL to load: ' + parsedUrl.authority)
