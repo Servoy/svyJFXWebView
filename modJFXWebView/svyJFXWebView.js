@@ -71,9 +71,9 @@
  */
 function WebViewPanel(container) {
 	if (!mustInitialize()) {
-		log.warn('Attempting to use modJFXWebView when JavaFX is not available (Java version: ' + Packages.java.lang.System.getProperty("java.version") + ')')
+		log.warn('Attempting to use svyJFXWebView when JavaFX is not available (Java version: ' + Packages.java.lang.System.getProperty("java.version") + ')')
 		var dummy = function(){
-			log.warn('Attempting to use modJFXWebView when JavaFX is not available (Java version: ' + Packages.java.lang.System.getProperty("java.version") + ')')
+			log.warn('Attempting to use svyJFXWebView when JavaFX is not available (Java version: ' + Packages.java.lang.System.getProperty("java.version") + ')')
 		}
 		return {
 			load: dummy,
