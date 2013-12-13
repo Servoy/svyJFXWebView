@@ -77,10 +77,10 @@ function testJFXWebViewWebPanel() {
 	var content = <html>
 		<body style="background-color: transparent">
 			<a id="lnk_old" href="callback://testCallbackUrl">Invoke local method urlCallback</a><br/>
-			<a id="lnk_old" href="callback://forms.testModWebView.testCallbackUrl">formMethod urlCallback</a><br/>
-			<a id="lnk_old" href="callback://forms.testModWebView.testCallbackUrl?fruit=banana&amp;brand=Chiquita">formMethod urlCallback with arguments</a><br/>
-			<a id="lnk" href="#" onclick="servoy.executeMethod('forms.testModWebView.testServoyExecuteMethod')">executeMethod</a><br/>
-			<button id="btn" onclick="servoy.executeMethod('forms.testModWebView.testServoyExecuteMethod', ['banaan', window])">executeMethod with params</button>
+			<a id="lnk_old" href="callback://forms.testSvyJFXWebView.testCallbackUrl">formMethod urlCallback</a><br/>
+			<a id="lnk_old" href="callback://forms.testSvyJFXWebView.testCallbackUrl?fruit=banana&amp;brand=Chiquita">formMethod urlCallback with arguments</a><br/>
+			<a id="lnk" href="#" onclick="servoy.executeMethod('forms.testSvyJFXWebView.testServoyExecuteMethod')">executeMethod</a><br/>
+			<button id="btn" onclick="servoy.executeMethod('forms.testSvyJFXWebView.testServoyExecuteMethod', ['banaan', window])">executeMethod with params</button>
 		</body>
 	</html>
 	application.output('Loading Test Content')
