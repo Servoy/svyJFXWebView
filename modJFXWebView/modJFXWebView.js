@@ -173,5 +173,5 @@ var init = (function() {
  * @properties={typeid:24,uuid:"329F719F-75D6-416E-94D9-0A01EBC6E476"}
  */
 function mustInitialize() {
-	return scopes.modUtils$system.isSwingClient() && typeof Packages.javafx.scene.web.WebView == 'function'
+	return scopes.svySystem.isSwingClient() && typeof Packages.javafx.scene.web.WebView == 'function'
 }
