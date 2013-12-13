@@ -104,7 +104,7 @@ function setUpPanel() {
 		
 		function callMethod() {
 			try {
-				var parentFormName = scopes.modUtils$UI.getParentFormName(forms[controller.getName()])
+				var parentFormName = scopes.svyUI.getParentFormName(forms[controller.getName()])
 				var context = parentFormName ? forms[parentFormName] : null
 				return scopes.modUtils.callMethod(qualifiedName, args, context)
 			} catch (e) {
