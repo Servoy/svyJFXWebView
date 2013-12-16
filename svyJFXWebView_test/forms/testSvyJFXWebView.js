@@ -71,65 +71,164 @@ function onAction(event) {
 }
 
 /**
- * @properties={typeid:24,uuid:"F5CBD179-0582-466A-8B97-C6063BD813A4"}
+ * @properties={typeid:24,uuid:"A165781C-1DC1-44E0-942C-FFA18B8EC22D"}
  */
-function testJFXWebViewWebPanel() {
+function loadTestHTML() {
 	var content = <html>
-		<body style="background-color: transparent">
-			<a id="lnk_old" href="callback://testCallbackUrl">Invoke local method urlCallback</a><br/>
-			<a id="lnk_old" href="callback://forms.testSvyJFXWebView.testCallbackUrl">formMethod urlCallback</a><br/>
-			<a id="lnk_old" href="callback://forms.testSvyJFXWebView.testCallbackUrl?fruit=banana&amp;brand=Chiquita">formMethod urlCallback with arguments</a><br/>
-			<a id="lnk" href="#" onclick="servoy.executeMethod('forms.testSvyJFXWebView.testServoyExecuteMethod')">executeMethod</a><br/>
-			<button id="btn" onclick="servoy.executeMethod('forms.testSvyJFXWebView.testServoyExecuteMethod', ['banaan', window])">executeMethod with params</button>
+		<body>
+			<a id="localLinkCallback" href="callback://testCallback">Invoke local method urlCallback</a><br/>
+			<a id="formLinkCallback" href="callback://forms.testSvyJFXWebView.testCallback">formMethod urlCallback</a><br/>
+			<a id="formLinkCallbackWithArgs" href="callback://forms.testSvyJFXWebView.testCallback?fruit=banana&amp;brand=Chiquita">formMethod urlCallback with arguments</a><br/>
+			<a id="executeMethod" href="#" onclick="servoy.executeMethod('forms.testSvyJFXWebView.testCallback')">executeMethod</a><br/>
+			<button id="executeMethodWithArgs" onclick="servoy.executeMethod('forms.testSvyJFXWebView.testCallback', ['banana', window])">executeMethod with params</button>
 		</body>
 	</html>
-	application.output('Loading Test Content')
 	webPanel.loadContent(content.toXMLString())
-
-	application.output('Executing Link click')
-	//Test callback:// url handling
-	webPanel.executeScriptLater('var evt = document.createEvent("MouseEvents"); evt.initEvent("click",true,true); document.getElementById("lnk").dispatchEvent(evt)')
-
-	application.output('Executing bUTTON click')
-	//Test servoy.executeMethod(methodName, args) upcall
-	webPanel.executeScriptLater('document.getElementById("btn").click()')
 }
+
+/**
+ * @type {Number}
+ *
+ * @properties={typeid:35,uuid:"0B1FE1B9-D52E-490C-8D04-622601093B10",variableType:4}
+ */
+var TIME_OUT = 1000
+
+/**
+ * @type {Number}
+ *
+ * @properties={typeid:35,uuid:"431AFA03-2D6D-475D-8842-22444B89E955",variableType:4}
+ */
+var UPDATE_WAIT = 100
+
+/**
+ * @properties={typeid:35,uuid:"D0C22038-4F6D-4B86-B915-CB7BAC3EE61F",variableType:-4}
+ */
+var callbackReceived = false
+
+/**
+ * @type {Object}
+ *
+ * @properties={typeid:35,uuid:"D34CE311-6F27-435D-A59F-36A5A8DB9769",variableType:-4}
+ */
+var callbackArgs
+
+/**
+ * @properties={typeid:24,uuid:"2984ECAC-6BEC-4CF7-84A6-FF1291A85A4A"}
+ */
+function setUp() {
+	loadTestHTML()
+}
+
+/**
+ * @properties={typeid:24,uuid:"F43C6B16-AD03-45DD-B8A4-911279EB0B7E"}
+ */
+function testLocalLinkCallback() {
+	callbackReceived = false
+	webPanel.executeScriptLater('var evt = document.createEvent("MouseEvents"); evt.initEvent("click",true,true); document.getElementById("localLinkCallback").dispatchEvent(evt)')
+	var it = 0
+	while (!callbackReceived && it < TIME_OUT / UPDATE_WAIT) {
+		application.updateUI(UPDATE_WAIT);
+		it++
+	}
+	if (!callbackReceived) {
+		jsunit.fail('callback not invoked within TIME_OUT period')
+	}
+}
+
+/**
+ * @properties={typeid:24,uuid:"A37787B4-FE44-4D18-B2BF-9501818C880D"}
+ */
+function testFormLinkCallback() {
+	callbackReceived = false
+	webPanel.executeScriptLater('var evt = document.createEvent("MouseEvents"); evt.initEvent("click",true,true); document.getElementById("formLinkCallback").dispatchEvent(evt)')
+	var it = 0
+	while (!callbackReceived && it < TIME_OUT / UPDATE_WAIT) {
+		application.updateUI(UPDATE_WAIT);
+		it++
+	}
+	if (!callbackReceived) {
+		jsunit.fail('callback not invoked within TIME_OUT period')
+	}
+}
+
+/**
+ * @properties={typeid:24,uuid:"3FEC9BC4-0108-48FD-B828-6E50A68BDC5C"}
+ */
+function testFormLinkCallbackWithArgs() {
+	callbackReceived = false
+	webPanel.executeScriptLater('var evt = document.createEvent("MouseEvents"); evt.initEvent("click",true,true); document.getElementById("formLinkCallbackWithArgs").dispatchEvent(evt)')
+	var it = 0
+	while (!callbackReceived && it < TIME_OUT / UPDATE_WAIT) {
+		application.updateUI(UPDATE_WAIT);
+		it++
+	}
+	if (!callbackReceived) {
+		jsunit.fail('callback not invoked within TIME_OUT period')
+	} else {
+		jsunit.assertEquals('banana', callbackArgs[0]['fruit'][0])
+		jsunit.assertEquals('Chiquita', callbackArgs[0]['brand'][0])
+	}
+}
+
+
 
 /**
  * @properties={typeid:24,uuid:"1A53D93A-A0CE-464C-BD67-5D50903771FD"}
  */
-function testCallbackUrl(isExecuteMethodCall) {
-	var logMessage = "testCallbackUrl called with " + arguments.length + " arguments"
-	application.setStatusText(new Date() + ": " + logMessage)
-	application.output(java.lang.Thread.currentThread().getName() + " " + logMessage)
-	for (var i = 0; i < arguments.length; i++) {
-		application.output(arguments[i])
+function testCallback() {
+	callbackReceived = true
+	callbackArgs = arguments
+}
+
+/**
+ * @properties={typeid:24,uuid:"0F15ACFE-DBD3-4E18-B0F6-A96EC3A41FFF"}
+ */
+function testExecuteMethod() {
+	callbackReceived = false
+	webPanel.executeScriptLater('var evt = document.createEvent("MouseEvents"); evt.initEvent("click",true,true); document.getElementById("executeMethod").dispatchEvent(evt)')
+	var it = 0
+	while (!callbackReceived && it < TIME_OUT / UPDATE_WAIT) {
+		application.updateUI(UPDATE_WAIT);
+		it++
+	}
+	if (!callbackReceived) {
+		jsunit.fail('callback not invoked within TIME_OUT period')
 	}
 }
 
 /**
- * @properties={typeid:24,uuid:"192457EC-4840-4A87-8F13-3E329B4C8AC0"}
+ * @properties={typeid:24,uuid:"6126C37D-25A2-4602-8133-DEEB7D319DD0"}
  */
-function testServoyExecuteMethod() {
-	var logMessage = "testServoyExecuteMethod called with " + arguments.length + " arguments"
-	application.setStatusText(new Date() + ": " + logMessage)
-	application.output(java.lang.Thread.currentThread().getName() + " " + logMessage)
-	for (var i = 0; i < arguments.length; i++) {
-		application.output(arguments[i])
+function testExecuteMethodWithArgs() {
+	callbackReceived = false
+	webPanel.executeScriptLater('document.getElementById("executeMethodWithArgs").click()')
+	var it = 0
+	while (!callbackReceived && it < TIME_OUT / UPDATE_WAIT) {
+		application.updateUI(UPDATE_WAIT);
+		it++
+	}
+	if (!callbackReceived) {
+		jsunit.fail('callback not invoked within TIME_OUT period')
+	} else {
+		jsunit.assertEquals(2, callbackArgs.length)
+		jsunit.assertEquals('banana', callbackArgs[0])
+		//TODO: check second argumnet
+		//jsunit.assertEquals('brand', callbackArgs['Chiquita'])
 	}
 }
 
-/**
- * @properties={typeid:24,uuid:"873D5A8F-9E53-4E0F-85C1-86E990710469"}
- */
-function testGarbageCollection() {
-	var ref = new java.lang.ref.WeakReference(webPanel)
-	
-	java.lang.System.gc()
-	if (ref.get()) {
-		//Fail: not cleared
-	}
-}
+///**
+// * @properties={typeid:24,uuid:"873D5A8F-9E53-4E0F-85C1-86E990710469"}
+// */
+//function testGarbageCollection() {
+//	var ref = new java.lang.ref.WeakReference(webPanel)
+//	
+//	java.lang.System.gc()
+//	if (ref.get()) {
+//		//Fail: not cleared
+//	}
+//}
+
 /**
  * Perform the element default action.
  *
@@ -139,6 +238,6 @@ function testGarbageCollection() {
  *
  * @properties={typeid:24,uuid:"9B725094-68F3-45E3-B108-8A6350FD7C59"}
  */
-function onAction1(event) {
+function showFirebug(event) {
 	webPanel.enableFirebug()
 }

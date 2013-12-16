@@ -32,7 +32,7 @@ uuid:"B57840D8-CEFF-4287-9B34-7DE42F86F6FA"
 },
 {
 location:"5,5",
-onActionMethodID:"F5CBD179-0582-466A-8B97-C6063BD813A4",
+onActionMethodID:"A165781C-1DC1-44E0-942C-FFA18B8EC22D",
 onDoubleClickMethodID:"-1",
 onRightClickMethodID:"-1",
 text:"Test",
