@@ -70,7 +70,7 @@
  * @properties={typeid:24,uuid:"9C95D0A8-7A31-4AF6-8011-771DE24E863A"}
  */
 function WebViewPanel(container) {
-	if (!mustInitialize()) {
+	if (!canInitialize()) {
 		log.warn('Attempting to use svyJFXWebView when JavaFX is not available (Java version: ' + Packages.java.lang.System.getProperty("java.version") + ')')
 		var dummy = function(){
 			log.warn('Attempting to use svyJFXWebView when JavaFX is not available (Java version: ' + Packages.java.lang.System.getProperty("java.version") + ')')
@@ -141,7 +141,7 @@ function WebViewPanel(container) {
  * @properties={typeid:35,uuid:"2C1A4FD1-06D8-40CD-BC62-7FFE638FE97E",variableType:-4}
  */
 var init = (function() { 
-	if (mustInitialize()) {
+	if (canInitialize()) {
 		/*
 		 * Registering a URLStreamHandler for the 'callback://' protocol, to be used from within HTML inside JFXWebView to do callbacks to Servoy's JavaScript layer based on URL's 
 		 * 
@@ -171,6 +171,6 @@ var init = (function() {
  * @private 
  * @properties={typeid:24,uuid:"329F719F-75D6-416E-94D9-0A01EBC6E476"}
  */
-function mustInitialize() {
+function canInitialize() {
 	return scopes.svySystem.isSwingClient() && typeof Packages.javafx.scene.web.WebView == 'function'
 }
