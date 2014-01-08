@@ -181,8 +181,8 @@ function setUpPanel() {
 				}
 				
 				if (application.isInDeveloper() || log.isDebugEnabled()) {
-					//Hook into WebEngine Debugging impl to log exceptions that happen in the page loaded into the WebPane
-					//WebPane exposes messageing interface that sends messages back and fort according to the Webkit Remote Debugging Protocol: https://developers.google.com/chrome-developer-tools/docs/protocol/1.0/console
+					//Hook into WebEngine Debugging impl. to log exceptions that happen in the page loaded into the WebPane
+					//WebPane exposes messaging interface that sends messages back and fort according to the Webkit Remote Debugging Protocol: https://developers.google.com/chrome-developer-tools/docs/protocol/1.0/console
 					var debuggerCallback = new Packages.javafx.util.Callback({
 						call: function(message) {
 							/** @type {{method: String,
