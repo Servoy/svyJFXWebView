@@ -116,11 +116,18 @@ function setUpPanel() {
 		if (Packages.javax.swing.SwingUtilities.isEventDispatchThread()) { //This scenario is not likely to happen
 			log.debug('Performing callback directly on Swing\'s EDT')
 			return callMethod()
-		} else if (!invokeAndWait || (executeScriptCountdownLatch && executeScriptCountdownLatch.getCount())) {
-			log.debug('Performing callback through SwingUtilities.invokeLater')
+		} else if (!invokeAndWait //explicit asynchronous callback 
+				   || (executeScriptCountdownLatch && executeScriptCountdownLatch.getCount()) //Prevent deadlock due to synchronous callback while an executeScriptAndwait is in progress
+				   || (webEngineNotReadyCountdownLatch && webEngineNotReadyCountdownLatch.getCount()) //Prevent deadlock due executeScript while the page is still loading
+				  ) {		
 			if (invokeAndWait) {
-				log.warn('Prevented deadlock! servoy.executeMethod called from JavaFX WebView in response to a call to WebViewPanel.executeScriptAndWait')
+				if (executeScriptCountdownLatch.getCount()) { //
+					log.warn('Prevented deadlock! servoy.executeMethod called from JavaFX WebView in response to a call to WebViewPanel.executeScriptAndWait')
+				} else {
+					log.warn('Prevented deadlock! servoy.executeMethod called from JavaFX WebView while JavaScript thread is waiting to execute a script through executeScriptXxxx as soon as the page displayed in the WebView has finished loading')
+				}
 			}
+			log.debug('Performing callback through SwingUtilities.invokeLater')
 			Packages.javax.swing.SwingUtilities.invokeLater(new Runnable({
 				run: callMethod
 			}))
@@ -380,12 +387,7 @@ function setUpPanel() {
 								}));
 							}
 							break;
-						case State.SUCCEEDED:
-//							//Re-adding the window.servoy property with the callBackClass. Needs to be everytime after the state has changed 
-//							/** @type {Packages.netscape.javascript.JSObject} */
-//							var window = webEngine.executeScript("window")
-//							window.setMember('servoy', callBackClass)
-							//Intentional fall through
+						case State.SUCCEEDED: //Intentional fall through
 						case State.FAILED: //Intentional fall through
 						case State.CANCELLED:
 							webEngineReady = true;
