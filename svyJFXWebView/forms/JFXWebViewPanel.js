@@ -121,7 +121,7 @@ function setUpPanel() {
 				   || (webEngineNotReadyCountdownLatch && webEngineNotReadyCountdownLatch.getCount()) //Prevent deadlock due executeScript while the page is still loading
 				  ) {		
 			if (invokeAndWait) {
-				if (executeScriptCountdownLatch.getCount()) { //
+				if (executeScriptCountdownLatch && executeScriptCountdownLatch.getCount()) { //
 					log.warn('Prevented deadlock! servoy.executeMethod called from JavaFX WebView in response to a call to WebViewPanel.executeScriptAndWait')
 				} else {
 					log.warn('Prevented deadlock! servoy.executeMethod called from JavaFX WebView while JavaScript thread is waiting to execute a script through executeScriptXxxx as soon as the page displayed in the WebView has finished loading')
