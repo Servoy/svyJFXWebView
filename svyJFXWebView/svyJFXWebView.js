@@ -146,22 +146,19 @@ var jfxAvailable = false
  * @SuppressWarnings(unused)
  * @properties={typeid:35,uuid:"2C1A4FD1-06D8-40CD-BC62-7FFE638FE97E",variableType:-4}
  */
-var init = (function() { 
+var init = (function() {
 	if (scopes.svySystem.isSwingClient()) {
-		if (!(jfxAvailable = (typeof Packages.javafx.scene.web.WebView == 'function')) && application.isInDeveloper()) { 
+		if (application.isInDeveloper()) { //!(jfxAvailable = (typeof Packages.javafx.scene.web.WebView == 'function')) && 
 			/* In developer JavaFX is loaded only when a instance of the JFXPanel bean is instantiated
-			 * It can happen that this code is executed before a FXPanel instance is created
+			 * It can happen that this code is executed before a JFXPanel instance is created
 			 * Therefore this code forces such instance creation
 			 */
-			var jsForm = solutionModel.getForm('JFXWebViewPanel')
-			var bean = jsForm.getBean('webPanel')
-			var id = application.getUUID().toString()
-			var tmpform = solutionModel.newForm(id,null)
-			solutionModel.cloneComponent('webPanel', bean, tmpform)
-			forms[id]
-			jfxAvailable = typeof Packages.javafx.scene.web.WebView == 'function'
-			history.removeForm(id)
-			solutionModel.removeForm(id)
+			log.trace('Trying forced JavaFX load in Developer')
+
+			var jfxPanel = new Packages.com.servoy.extensions.beans.jfxpanel.JFXPanel();
+			/** @type {Packages.com.servoy.extensions.beans.jfxpanel.ServoyJFXPanel} */
+			var svyJFXPanel = jfxPanel.getBeanInstance(2,null,null)
+			jfxAvailable = svyJFXPanel.isJavaFXAvailable()
 		}
 	}
 	
