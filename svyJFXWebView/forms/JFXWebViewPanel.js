@@ -93,56 +93,34 @@ function setUpPanel() {
 	/**
 	 * @param {String} qualifiedName
 	 * @param {*} [args]
-	 * @param {Boolean} invokeAndWait
-	 * 
-	 * @return {*} If not invoked on Swing's EDT, there will not be a return value, because that could cause deadlocks
 	 * 
 	 * @throws {scopes.svyExceptions.IllegalArgumentException}
 	 */
-	function callServoyMethod(qualifiedName, args, invokeAndWait) {
-		log.debug('callback: ' + qualifiedName + ' (' + JSON.stringify(args) + ' )' )
+	function callServoyMethod(qualifiedName, args) {
+		log.debug('upcall: ' + qualifiedName + ' (' + JSON.stringify(args) + ' )' )
 		
 		function callMethod() {
 			try {
 				var parentFormName = scopes.svyUI.getParentFormName(forms[controller.getName()])
 				var context = parentFormName ? forms[parentFormName] : null
-				return scopes.svySystem.callMethod(qualifiedName, args, context)
+				scopes.svySystem.callMethod(qualifiedName, args, context)
 			} catch (e) {
-				log.error('Error handling callback from JFXWebView back to Servoy scripting layer', e)
+				log.error('Error handling upcall from JFXWebView back to Servoy scripting layer', e)
 			}
-			return null
 		}
 		
 		if (Packages.javax.swing.SwingUtilities.isEventDispatchThread()) { //This scenario is not likely to happen
-			log.debug('Performing callback directly on Swing\'s EDT')
-			return callMethod()
-		} else if (!invokeAndWait //explicit asynchronous callback 
-				   || (executeScriptCountdownLatch && executeScriptCountdownLatch.getCount()) //Prevent deadlock due to synchronous callback while an executeScriptAndwait is in progress
-				   || (webEngineNotReadyCountdownLatch && webEngineNotReadyCountdownLatch.getCount()) //Prevent deadlock due executeScript while the page is still loading
-				  ) {		
-			if (invokeAndWait) {
-				if (executeScriptCountdownLatch && executeScriptCountdownLatch.getCount()) { //
-					log.warn('Prevented deadlock! servoy.executeMethod called from JavaFX WebView in response to a call to WebViewPanel.executeScriptAndWait')
-				} else {
-					log.warn('Prevented deadlock! servoy.executeMethod called from JavaFX WebView while JavaScript thread is waiting to execute a script through executeScriptXxxx as soon as the page displayed in the WebView has finished loading')
-				}
-			}
-			log.debug('Performing callback through SwingUtilities.invokeLater')
-			Packages.javax.swing.SwingUtilities.invokeLater(new Runnable({
-				run: callMethod
-			}))
+			log.debug('Performing upcall directly on Swing\'s EDT')
+			callMethod()
 		} else {
-			log.debug('Performing callback through SwingUtilities.invokeAndWait')
-			var tmp
-			Packages.javax.swing.SwingUtilities.invokeAndWait(new Runnable({
+			log.debug('Performing upcall through SwingUtilities.invokeLater')
+			Packages.javax.swing.SwingUtilities.invokeLater(new Runnable({
 				run: function() {
-					log.debug('Performing callback through SwingUtilities.invokeAndWait: run called')
-					tmp = callMethod()
+					log.debug('Performing upcall through SwingUtilities.invokeLater: run called')
+					callMethod()
 				}
 			}))
-			return tmp
-		} 
-		return null;
+		}
 	}
 
 	//Import some of the required Java classes for easy coding
@@ -182,7 +160,8 @@ function setUpPanel() {
 				
 				if (application.isInDeveloper() || log.isDebugEnabled()) {
 					//Hook into WebEngine Debugging impl. to log exceptions that happen in the page loaded into the WebPane
-					//WebPane exposes messaging interface that sends messages back and fort according to the Webkit Remote Debugging Protocol: https://developers.google.com/chrome-developer-tools/docs/protocol/1.0/console
+					//WebPane exposes messaging interface that sends messages back and forth according to the Webkit Remote Debugging Protocol: https://developers.google.com/chrome-developer-tools/docs/protocol/1.0/console
+					var lastMessage
 					var debuggerCallback = new Packages.javafx.util.Callback({
 						call: function(message) {
 							/** @type {{method: String,
@@ -202,12 +181,15 @@ function setUpPanel() {
 							var messageObject = JSON.parse(message)
 							switch (messageObject.method) {
 								case 'Console.messageAdded':
-									var output = messageObject.params.message.text
-									switch (messageObject.params.message.level) {
+									lastMessage = messageObject.params.message
+									//Intentional fall through
+								case 'Console.messageRepeatCountUpdated':	
+									var output = lastMessage.text
+									switch (lastMessage.level) {
 										case 'error':
-											if (messageObject.params.message.stackTrace) {
+											if (lastMessage.stackTrace) {
 												var first = true
-												for each (var callFrame in messageObject.params.message.stackTrace) {
+												for each (var callFrame in lastMessage.stackTrace) {
 													output += first ? ' ' : '\n\tat '
 													output += callFrame.url + ':' + callFrame.lineNumber + ' (' + callFrame.functionName + ')'
 													first = false
@@ -305,12 +287,26 @@ function setUpPanel() {
 		function unwrapJSObject(o) {
 			if (o instanceof Packages.netscape.javascript.JSObject) {
 				var retval
-				if (o.getMember('length') instanceof Number) { //Must be an Array
+				if (o.eval("this instanceof Function")) { //Functions
+					/* JavaScript function passed from Web View to Servoy scripting layer, most likely to be used as callback.
+					 * Wrapping the JSObject representing a JavaScript function from teh Web view into a JavaScript function in the Servoy scripting layer
+					 * to make sure that if the callback gets invoked, it happens on the JavaFx Application Thread
+					 */
+					retval = function() {
+						var args = arguments
+						Platform.runLater(new Runnable({
+							run: function() {
+								log.debug('Performing callback to Web View')
+								o.call('apply', null, Array.prototype.slice.call(args))
+							}
+						}))
+					}
+				} else if (o.eval("Array.isArray(this)")) { //Arrays
 					retval = []
 					for (var i = 0, l = o.getMember('length'); i < l; i++) {
 						retval.push(unwrapJSObject(o.getSlot(i)))
 					}
-				} else { //must be an object
+				} else if (o.eval("Object.prototype.toString.call(this)") == '[object Object]') { //Plain JavaScript Objects
 					retval = {}
 					/** @type {Packages.netscape.javascript.JSObject} */
 					var keys = o.eval("Object.keys(this)")
@@ -319,6 +315,9 @@ function setUpPanel() {
 						var key = keys.getSlot(i)
 						retval[key] = unwrapJSObject(o.getMember(key))
 					}
+				} else { //Must be a host object, DOM node etc. Not returning these, as these objects can only be accessed from the JavaFX thread
+					log.warn('Prevented passing non-JavaScript object to the Servoy scripting layer (value is replaced with null): ' + o.eval("Object.prototype.toString.call(this)"))
+					retval = null
 				}
 				return retval
 			}
@@ -333,9 +332,7 @@ function setUpPanel() {
 				 * @param {Packages.netscape.javascript.JSObject} args
 				 */
 				executeMethod: function(methodName, args) {
-					var tmp = callServoyMethod(methodName, unwrapJSObject(args), true)
-					log.debug('executeMethod returning: ' + JSON.stringify(tmp))
-					return JSON.stringify(tmp); //CHECKME: Should we stringify here or is that up to the called method?
+					callServoyMethod(methodName, unwrapJSObject(args))
 				}
 			})
 	} catch (e) {
@@ -377,7 +374,7 @@ function setUpPanel() {
 						case State.SCHEDULED:
 							if (webEngine.getLocation().indexOf('callback://') == 0) {
 								var parsedUrl = scopes.svyNet.parseUrl(webEngine.getLocation())
-								callServoyMethod(parsedUrl.host, Object.getOwnPropertyNames(parsedUrl.queryKey).length != 0 ? parsedUrl.queryKey : null, false)
+								callServoyMethod(parsedUrl.host, Object.getOwnPropertyNames(parsedUrl.queryKey).length != 0 ? parsedUrl.queryKey : null)
 								
 								//Canceling the loading of the url if it's a callback url. Needs to be done through Platform.runLater or else it'll crash the JVM
 								Platform.runLater(new Runnable({
