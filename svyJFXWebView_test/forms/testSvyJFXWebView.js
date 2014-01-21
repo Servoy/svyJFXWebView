@@ -75,15 +75,41 @@ function onAction(event) {
  */
 function loadTestHTML() {
 	var content = <html>
+		<head>
+			<script><![CDATA[
+			function callback() {
+				/* Strings (probably other types as well) are not passed into the WebView scripting engine as strings, but as JavaRuntimeObject
+				 * This is most likely due to the fact that JavaScript strings passed from the Servoy scripting layer to the Java layer in Rhino 
+				 * are wrapped in some internal classes of Rhino and since the API of the WebView used to do the callback takes an Array of Objects
+				 * the Rhino engine doesn't knwo how to properly unwrap stuff.
+				 * 
+				 * Most of the time this isn't an issue, but it becomes an issue when doing typechecking or stringifcation, like:
+				 * console.log(arguments[0])
+				 * console.log(typeof arguments[0])
+				 * console.log(arguments[0] instanceof String)
+				 * console.log(Object.prototype.toString.call(arguments[0]))
+				 * console.log(arguments)
+				 * console.log(Array.prototype.slice.call(arguments))
+				 * console.log(JSON.stringify(Array.prototype.slice.call(arguments)))
+				 * console.log(JSON.stringify(arguments))
+				 */
+				
+				console.log('callMe!!!! called with arguments: ' + arguments[0])
+			}
+			]]>
+			</script>
+		</head>
 		<body>
 			<a id="localLinkCallback" href="callback://testCallback">Invoke local method urlCallback</a><br/>
 			<a id="formLinkCallback" href="callback://forms.testSvyJFXWebView.testCallback">formMethod urlCallback</a><br/>
 			<a id="formLinkCallbackWithArgs" href="callback://forms.testSvyJFXWebView.testCallback?fruit=banana&amp;brand=Chiquita">formMethod urlCallback with arguments</a><br/>
 			<a id="executeMethod" href="#" onclick="servoy.executeMethod('forms.testSvyJFXWebView.testCallback')">executeMethod</a><br/>
 			<button id="executeMethodWithArgs" onclick="servoy.executeMethod('forms.testSvyJFXWebView.testCallback', ['banana', window])">executeMethod with params</button>
+			<button id="executeMethodWithArgsAndCallback" onclick="alert('hello');servoy.executeMethod('forms.testSvyJFXWebView.testCallback', ['banana', callback])">executeMethod with params and callback</button>
 		</body>
 	</html>
-	webPanel.loadContent(content.toXMLString())
+	//webPanel.loadContent(content.toXMLString())
+	webPanel.loadContent(content.toXMLString().replace('<![CDATA[', '').replace(']]>', ''))
 }
 
 /**
@@ -116,6 +142,41 @@ var callbackArgs
  * @properties={typeid:24,uuid:"2984ECAC-6BEC-4CF7-84A6-FF1291A85A4A"}
  */
 function setUp() {
+	var config = {
+		status: "error",
+		plugins: 'scopes.svyUnitTestUtils.TestAppender',
+		appenders: [{
+			type: "scopes.svyUnitTestUtils.TestAppender",
+			name: "ApplicationOutputAppender",
+			PatternLayout: {
+				pattern: "%5level %logger{1.} - %msg"
+			}
+		}],
+		loggers: {
+			logger: [{
+				name: "com.servoy.bap.components.webpanel.console",
+				level: "debug",
+				additivity: false,
+				AppenderRef: {
+					ref: "ApplicationOutputAppender"
+				}
+			}, {
+				name: "com.servoy.bap.components.webpanel",
+				level: "warn",
+				additivity: false,
+				AppenderRef: {
+					ref: "ApplicationOutputAppender"
+				}
+			}],
+			root: {
+				level: "error",
+				AppenderRef: {
+					ref: "ApplicationOutputAppender"
+				}
+			}
+		}
+	}
+	scopes.svyLogManager.loadConfig(config)
 	loadTestHTML()
 }
 
@@ -170,14 +231,13 @@ function testFormLinkCallbackWithArgs() {
 	}
 }
 
-
-
 /**
  * @properties={typeid:24,uuid:"1A53D93A-A0CE-464C-BD67-5D50903771FD"}
  */
 function testCallback() {
 	callbackReceived = true
 	callbackArgs = arguments
+	return 'hello'
 }
 
 /**
@@ -212,8 +272,45 @@ function testExecuteMethodWithArgs() {
 	} else {
 		jsunit.assertEquals(2, callbackArgs.length)
 		jsunit.assertEquals('banana', callbackArgs[0])
-		//TODO: check second argumnet
-		//jsunit.assertEquals('brand', callbackArgs['Chiquita'])
+		jsunit.assertEquals(null, callbackArgs[1])
+		//Check for log entry about passing Window
+		jsunit.assertEquals(1, scopes.svyUnitTestUtils.logMessages.ApplicationOutputAppender.length)
+		var expectedLogMessage = ' WARN c.s.b.c.webpanel - Prevented passing non-JavaScript object to the Servoy scripting layer (value is replaced with null): [object DOMWindow]'
+		jsunit.assertEquals(expectedLogMessage, scopes.svyUnitTestUtils.logMessages.ApplicationOutputAppender[0])
+	}
+}
+
+/**
+ * @properties={typeid:24,uuid:"A9AE4F84-3D0C-4A21-B48A-77490C101D4B"}
+ */
+function testExecuteMethodWithArgsAndCallback() {
+	callbackReceived = false
+	webPanel.executeScriptLater('document.getElementById("executeMethodWithArgsAndCallback").click()')
+	var it = 0
+	while (!callbackReceived && it < TIME_OUT / UPDATE_WAIT) {
+		application.updateUI(UPDATE_WAIT);
+		it++
+	}
+	if (!callbackReceived) {
+		jsunit.fail('callback not invoked within TIME_OUT period')
+	} else {
+		jsunit.assertEquals(2, callbackArgs.length)
+		jsunit.assertEquals('banana', callbackArgs[0])
+		jsunit.assertEquals('function', typeof callbackArgs[1])
+		scopes.svyUnitTestUtils.logMessages.ApplicationOutputAppender.length = 0
+		callbackArgs[1]('Hello', 1)
+		it = 0
+		while (!scopes.svyUnitTestUtils.logMessages.ApplicationOutputAppender.length && it < TIME_OUT / UPDATE_WAIT) {
+			application.updateUI(UPDATE_WAIT);
+			it++
+		}
+		if (!scopes.svyUnitTestUtils.logMessages.ApplicationOutputAppender.length) {
+			jsunit.fail('callback not invoked within TIME_OUT period')
+		}
+		//TODO: assert if the callback was called by checking the console log output through the TestAppender
+		jsunit.assertEquals(1, scopes.svyUnitTestUtils.logMessages.ApplicationOutputAppender.length)
+		jsunit.assertEquals(' INFO c.s.b.c.w.console - callMe!!!! called with arguments: Hello', scopes.svyUnitTestUtils.logMessages.ApplicationOutputAppender[0])
+		
 	}
 }
 

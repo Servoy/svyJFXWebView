@@ -2,4 +2,5 @@
 <buildpath>
 	<buildpathentry excluding=".stp/|medias/" kind="src" path=""/>
 	<buildpathentry exported="true" kind="prj" path="/svyJFXWebView"/>
+	<buildpathentry exported="true" kind="prj" path="/svyUtils$unitTest"/>
 </buildpath>
