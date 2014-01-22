@@ -29,13 +29,13 @@
  * @private
  * @properties={typeid:35,uuid:"5DBA7CA5-3CD8-4D42-91B1-3834E7CBCFC1",variableType:-4}
  */
-var log = scopes.svyLogManager.getLogger('com.servoy.bap.components.webpanel')
+var log = scopes.svyLogManager.getLogger('com.servoy.bap.components.webview')
 
 /**
  * @private 
  * @properties={typeid:35,uuid:"5B36AB35-123F-4648-A7E7-9C36DDC2CFD0",variableType:-4}
  */
-var consoleLog = scopes.svyLogManager.getLogger('com.servoy.bap.components.webpanel.console')
+var consoleLog = scopes.svyLogManager.getLogger('com.servoy.bap.components.webview.console')
 
 /**
  * @private

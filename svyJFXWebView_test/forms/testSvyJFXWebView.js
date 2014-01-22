@@ -154,14 +154,14 @@ function setUp() {
 		}],
 		loggers: {
 			logger: [{
-				name: "com.servoy.bap.components.webpanel.console",
+				name: "com.servoy.bap.components.webview.console",
 				level: "debug",
 				additivity: false,
 				AppenderRef: {
 					ref: "ApplicationOutputAppender"
 				}
 			}, {
-				name: "com.servoy.bap.components.webpanel",
+				name: "com.servoy.bap.components.webview",
 				level: "warn",
 				additivity: false,
 				AppenderRef: {

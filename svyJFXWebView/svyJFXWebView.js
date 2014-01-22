@@ -19,7 +19,7 @@
   * @private
   * @properties={typeid:35,uuid:"D01B2F1E-047D-4A93-BB4C-00DED8AEAD6A",variableType:-4}
   */
- var log = scopes.svyLogManager.getLogger('com.servoy.bap.components.webpanel')
+ var log = scopes.svyLogManager.getLogger('com.servoy.bap.components.webview')
 
 /**
  * Creates and displays a JavaFX WebView component in the supplied container<br>
