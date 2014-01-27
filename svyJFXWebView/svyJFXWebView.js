@@ -37,11 +37,13 @@
  * 2. Through callback url's, for example: <i>callback://{methodName}?key1=value1&key2=value2</i>. Note that XHTTPRequests using url's using the callback:// protocol are not supported due to CORS restrictions<br>
  * <br>
  * The methodName used in the upcalls can be either the name of a method on the form on which the JFXWebView is displayed or a fully qualified path to a method on a form or in a scope<br>
+ * The call to the method specified when doing <i>servoy.executeMethod</i> is asynchronous, so <i>servoy.executeMethod</i> always returns void.<br>
+ * It is possible to send a function as argument into <i>servoy.executeMethod</i> to be executed inside the Servoy scripting layer as callback
  * <br>
  * Known issues:<br>
  * <ul>
  * <li>Loading websites that require (basic http) authentication will result in a login dialog popup, regardless if the username/password are passed in through the URL</li>
- * <li>=< Servoy 7.4: After being loaded a first time, JS & CSS are cached for the duration of JVM session. Especially in Servoy Developer this is cumbersome, as it requires restarting Servoy Developer to test changes</li>
+ * <li>=< Servoy 7.3: After being loaded a first time, JS & CSS are cached for the duration of JVM session. Especially in Servoy Developer this is cumbersome, as it requires restarting Servoy Developer to test changes</li>
  * </ul>
  * 
  * @constructor
