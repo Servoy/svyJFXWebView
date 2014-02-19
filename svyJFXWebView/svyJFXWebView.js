@@ -150,7 +150,7 @@ var jfxAvailable = false
  */
 var init = (function() {
 	if (scopes.svySystem.isSwingClient()) {
-		if (application.isInDeveloper()) { //!(jfxAvailable = (typeof Packages.javafx.scene.web.WebView == 'function')) && 
+		if (application.isInDeveloper()) {
 			/* In developer JavaFX is loaded only when a instance of the JFXPanel bean is instantiated
 			 * It can happen that this code is executed before a JFXPanel instance is created
 			 * Therefore this code forces such instance creation
@@ -161,6 +161,8 @@ var init = (function() {
 			/** @type {Packages.com.servoy.extensions.beans.jfxpanel.ServoyJFXPanel} */
 			var svyJFXPanel = jfxPanel.getBeanInstance(2,null,null)
 			jfxAvailable = svyJFXPanel.isJavaFXAvailable()
+		} else {
+			jfxAvailable = typeof Packages.javafx.scene.web.WebView == 'function'
 		}
 	}
 	
