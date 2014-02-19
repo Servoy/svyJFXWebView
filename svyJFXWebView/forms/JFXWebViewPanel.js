@@ -496,7 +496,7 @@ function executeScriptAndWait(code) {
 			try {
 				retval = webEngine.executeScript(code)
 			} catch (e) {
-				e['stack'] //Touching the stack property, so it in instantiated. Dunno why this is needed...
+				e.stack //Touching the stack property, so it in instantiated. Dunno why this is needed...
 				error = e //Saving the error, so it can be rethrown on the Swing thread to get the correct stacktrace
 			} finally {
 				if (log.isTraceEnabled()) {
@@ -544,7 +544,7 @@ function executeScriptLater(code) {
 			try {
 				webEngine.executeScript(code)
 			} catch (e) {
-				e['stack'] //Touching the stack property, so it in instantiated. Dunno why this is needed...
+				e.stack //Touching the stack property, so it in instantiated. Dunno why this is needed...
 				error = e //Saving the error, so it can be rethrown on the Swing thread to get the correct stacktrace
 			} finally {
 				if (log.isTraceEnabled()) {
