@@ -6,7 +6,7 @@ A HTML5 WebView component for the Servoy Smart Client. 'svyJFXWebView' is a modu
 
 Documentation
 -------------
-See the [Wiki](https://github.com/Servoy/svyUtils/wiki) for the available documentation
+See the [Wiki](https://github.com/Servoy/svyJFXWebView/wiki) for the available documentation
 
 
 License
