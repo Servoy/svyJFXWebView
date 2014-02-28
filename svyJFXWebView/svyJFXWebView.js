@@ -33,7 +33,7 @@
  * The content in the JavaFX WebView can make use of media:/// urls to access resources stored in the Servoy Media library<br>
  * <br>
  * From within the content of the JavaFX WebView upcalls can be made to the Servoy scripting layer in two ways:<br>
- * 1. Through JavaScript using <i>servoy.executeMethod(methodName:String, arguments:Array<*>)</i><br>
+ * 1. From JavaScript using <i>servoy.executeMethod(methodName:String, arguments:Array<*>)</i><br>
  * 2. Through callback url's, for example: <i>callback://{methodName}?key1=value1&key2=value2</i>. Note that XHTTPRequests using url's using the callback:// protocol are not supported due to CORS restrictions<br>
  * <br>
  * The methodName used in the upcalls can be either the name of a method on the form on which the JFXWebView is displayed or a fully qualified path to a method on a form or in a scope<br>
