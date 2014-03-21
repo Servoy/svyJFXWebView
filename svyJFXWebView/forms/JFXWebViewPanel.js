@@ -23,6 +23,7 @@
  * - testsite: http://test.webdav.org/
  * - More Java info: https://forums.oracle.com/thread/2347310, http://docs.oracle.com/javase/7/docs/technotes/guides/net/http-auth.html, http://docs.oracle.com/javase/6/docs/api/java/net/Authenticator.html
  * TODO: add support to handle right-clicks
+ * TODO: Printing: http://stackoverflow.com/questions/7796558/javafx-2-0-webview-webengine-render-web-page-to-an-image
  */
 
 /**
@@ -240,7 +241,7 @@ function setUpPanel() {
 					}
 				}))
 			} catch (e) {
-				// TODO: handle exception
+				log.error(e)
 			} finally {
 				latch.countDown()
 			}
@@ -353,7 +354,7 @@ function setUpPanel() {
 			webEngine.documentProperty().addListener(new ChangeListener({
 				changed: function(ov, oldState, newState) {
 					log.debug('DocumentProperty Changed: ' + oldState + ' > ' + newState)
-					//Re-adding the window.servoy property with the callBackClass. Needs to be everytime after the state has changed 
+					//Re-adding the window.servoy property with the callBackClass. Needs to be done every time the document has changed 
 					/** @type {Packages.netscape.javascript.JSObject} */
 					var window = webEngine.executeScript("window")
 					window.setMember('servoy', callBackClass)
