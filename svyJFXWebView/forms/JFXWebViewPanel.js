@@ -136,9 +136,8 @@ function setUpPanel() {
 	Platform.runLater(new Runnable({
 		run: function() {
 			try {
-				//TODO: add transparent background support when implemented, see https://javafx-jira.kenai.com/browse/RT-25004
 				browser = new WebView();
-				webEngine = browser.getEngine();
+				webEngine = browser.getEngine()					
 				
 				/*
 				 * Proper sizing is tricky:
@@ -148,6 +147,7 @@ function setUpPanel() {
 	//			browser.prefWidthProperty().bind(scene.widthProperty());
 	//		    browser.prefHeightProperty().bind(scene.heightProperty());
 				scene = new Scene(browser) //, 200, 160
+				scene.setFill(Packages.javafx.scene.paint.Color.TRANSPARENT) //To support transparency
 				elements.webPanel.setScene(scene)
 				
 				if (log.isTraceEnabled()) {
@@ -357,6 +357,19 @@ function setUpPanel() {
 					/** @type {Packages.netscape.javascript.JSObject} */
 					var window = webEngine.executeScript("window")
 					window.setMember('servoy', callBackClass)
+					
+					//TODO: properly add transparent background support when implemented, see https://javafx-jira.kenai.com/browse/RT-25004
+					//Accessing private .getPage() method through reflection, in order to be able to call the page.setBackgroundColor() method to make the WebView transparent
+					var method = webEngine.getClass().getDeclaredMethod("getPage", null);
+					if (method) {
+						method.setAccessible(true);
+						
+						/**@type {Packages.com.sun.webkit.WebPage}*/
+						var page = method.invoke(webEngine, null);
+						if (page.setBackgroundColor) {
+							page.setBackgroundColor(0x00000000)
+						}
+					}
 				}
 			}))
 			
