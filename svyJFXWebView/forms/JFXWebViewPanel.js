@@ -88,6 +88,12 @@ var executeScriptCountdownLatch
 
 /**
  * @private
+ * @properties={typeid:35,uuid:"F9768896-AA1B-4DF3-B401-D2807DC2FA86",variableType:-4}
+ */
+var isJSObjectVarArgs
+
+/**
+ * @private
  * @properties={typeid:24,uuid:"B4DC94FB-14B9-440C-B4C4-2EFE28DA2DC2"}
  */
 function setUpPanel() {
@@ -289,16 +295,39 @@ function setUpPanel() {
 			if (o instanceof Packages.netscape.javascript.JSObject) {
 				var retval
 				if (o.eval("this instanceof Function")) { //Functions
+					/*
+					 * Turns out that when deployed through Java WebStart, another implementation of the netscape.javascript.JSObject is used 
+					 * than in developer, where the .call() has a slightly different implementation:
+					 * One uses an Object[] second argument, the otehr uses varargs.
+					 * 
+					 * This code checks that and stored the value in isJSObjectVarArgs which is later used to branch in code
+					 * 
+					 * See:
+					 * http://www.oracle.com/webfolder/technetwork/java/plugin2/liveconnect/jsobject-javadoc/netscape/javascript/JSObject.html
+					 * http://docs.oracle.com/javafx/2/api/netscape/javascript/JSObject.html
+					 */
+					if (isJSObjectVarArgs === null) {
+						isJSObjectVarArgs = false
+						var methods = o.getClass().getDeclaredMethods()
+						isJSObjectVarArgs = methods.some(function(val, idx, ar){if (val.getName() == 'call') {return val.isVarArgs()}})
+					}
+					
 					/* JavaScript function passed from Web View to Servoy scripting layer, most likely to be used as callback.
-					 * Wrapping the JSObject representing a JavaScript function from teh Web view into a JavaScript function in the Servoy scripting layer
+					 * Wrapping the JSObject representing a JavaScript function from the Web view into a JavaScript function in the Servoy scripting layer
 					 * to make sure that if the callback gets invoked, it happens on the JavaFx Application Thread
 					 */
 					retval = function() {
 						var args = arguments
 						Platform.runLater(new Runnable({
 							run: function() {
-								log.debug('Performing callback to Web View')
-								o.call('apply', null, Array.prototype.slice.call(args))
+								var ar = Array.prototype.slice.call(args)
+								if (isJSObjectVarArgs) {
+									ar.unshift(null)
+									o.call('call', ar)	
+								} else {
+									o.call('apply', [null, ar])	
+								}
+								
 							}
 						}))
 					}
