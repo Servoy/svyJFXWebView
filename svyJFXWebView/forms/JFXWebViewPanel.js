@@ -309,7 +309,12 @@ function setUpPanel() {
 					if (isJSObjectVarArgs === null) {
 						isJSObjectVarArgs = false
 						var methods = o.getClass().getDeclaredMethods()
-						isJSObjectVarArgs = methods.some(function(val, idx, ar){if (val.getName() == 'call') {return val.isVarArgs()}})
+						isJSObjectVarArgs = methods.some(function(val, idx, ar){
+							if (val.getName() == 'call') {
+								return val.isVarArgs()
+					}
+							return false
+						})
 					}
 					
 					/* JavaScript function passed from Web View to Servoy scripting layer, most likely to be used as callback.
