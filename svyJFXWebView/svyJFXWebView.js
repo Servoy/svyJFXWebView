@@ -135,7 +135,7 @@ function WebViewPanel(container) {
 	this.enableFirebug = function() {
 		forms[formName].enableFirebug()
 	}
-} //This warning should be solved by SVY-5371
+}
 
 /**
  * @private
