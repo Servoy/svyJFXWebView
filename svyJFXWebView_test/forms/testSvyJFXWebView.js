@@ -121,7 +121,7 @@ function loadTestHTML() {
  *
  * @properties={typeid:35,uuid:"0B1FE1B9-D52E-490C-8D04-622601093B10",variableType:4}
  */
-var TIME_OUT = 1000
+var TIME_OUT = 5000
 
 /**
  * @type {Number}
