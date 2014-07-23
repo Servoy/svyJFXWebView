@@ -172,7 +172,7 @@ application.output(svyJFXPanel)
 application.output(jfxAvailable)
 		}
 	}
-	
+application.output(typeof Packages.javafx.scene.web.WebView)	
 	if (jfxAvailable) {
 		/*
 		 * Registering a URLStreamHandler for the 'callback://' protocol, to be used from within HTML inside JFXWebView to do callbacks to Servoy's JavaScript layer based on URL's 
