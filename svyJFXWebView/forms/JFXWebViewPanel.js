@@ -156,7 +156,7 @@ function setUpPanel() {
 				scene = new Scene(browser) //, 200, 160
 				scene.setFill(Packages.javafx.scene.paint.Color.TRANSPARENT) //To support transparency
 				elements.webPanel.setScene(scene)
-				
+
 				if (log.isTraceEnabled()) {
 					webEngine.setOnResized(new Packages.javafx.event.EventHandler({
 						handle: function(evt){
@@ -165,80 +165,78 @@ function setUpPanel() {
 					}))
 				}
 				
-				if (application.isInDeveloper() || log.isDebugEnabled()) {
-					//Hook into WebEngine Debugging impl. to log exceptions that happen in the page loaded into the WebPane
-					//WebPane exposes messaging interface that sends messages back and forth according to the Webkit Remote Debugging Protocol: https://developers.google.com/chrome-developer-tools/docs/protocol/1.0/console
-					var lastMessage
-					var debuggerCallback = new Packages.javafx.util.Callback({
-						call: function(message) {
-							/** @type {{method: String,
-							 * 		params: {
-							 * 			message: {
-							 * 				text: String,
-							 * 				level: String,
-							 * 				stackTrace: Array<{
-							 * 					url: String,
-							 * 					lineNumber: Number,
-							 * 					functionName: String
-							 * 				}>
-							 * 			}		
-							 * 		}
-							 * }}
-							 */
-							var messageObject = JSON.parse(message)
-							switch (messageObject.method) {
-								case 'Console.messageAdded':
-									lastMessage = messageObject.params.message
-									//Intentional fall through
-								case 'Console.messageRepeatCountUpdated':	
-									var output = lastMessage.text
-									switch (lastMessage.level) {
-										case 'error':
-											if (lastMessage.stackTrace) {
-												var first = true
-												for each (var callFrame in lastMessage.stackTrace) {
-													output += first ? ' ' : '\n\tat '
-													output += callFrame.url + ':' + callFrame.lineNumber + ' (' + callFrame.functionName + ')'
-													first = false
-												}
+				//Hook into WebEngine Debugging impl. to log exceptions that happen in the page loaded into the WebPane
+				//WebPane exposes messaging interface that sends messages back and forth according to the Webkit Remote Debugging Protocol: https://developers.google.com/chrome-developer-tools/docs/protocol/1.0/console
+				var lastMessage
+				var debuggerCallback = new Packages.javafx.util.Callback({
+					call: function(message) {
+						/** @type {{method: String,
+						 * 		params: {
+						 * 			message: {
+						 * 				text: String,
+						 * 				level: String,
+						 * 				stackTrace: Array<{
+						 * 					url: String,
+						 * 					lineNumber: Number,
+						 * 					functionName: String
+						 * 				}>
+						 * 			}		
+						 * 		}
+						 * }}
+						 */
+						var messageObject = JSON.parse(message)
+						switch (messageObject.method) {
+							case 'Console.messageAdded':
+								lastMessage = messageObject.params.message
+								//Intentional fall through
+							case 'Console.messageRepeatCountUpdated':	
+								var output = lastMessage.text
+								switch (lastMessage.level) {
+									case 'error':
+										if (lastMessage.stackTrace) {
+											var first = true
+											for each (var callFrame in lastMessage.stackTrace) {
+												output += first ? ' ' : '\n\tat '
+												output += callFrame.url + ':' + callFrame.lineNumber + ' (' + callFrame.functionName + ')'
+												first = false
 											}
-											consoleLog.error(output)
-											break;
-										case 'debug':
-											consoleLog.debug(output)
-											break;
-										case 'warning':
-											consoleLog.warn(output)
-											break;
-										case 'log': //Intentional fallthrough
-										case 'tip': //Intentional fallthrough
-										default:
-											consoleLog.info(output)
-											break;
-									}
-									break;
-								
-								default:
-									break;
-							}
-							if (log.isTraceEnabled()) {
-								log.trace('JFXWebViewPanel form dimensions: x=' + controller.getFormWidth() + ', y=?')
-								log.trace('JFXPanel bean dimensions: x=' + elements.webPanel.getWidth() + ', y=' + elements.webPanel.getHeight())
-								//TODO: this raises errors in the log that getwidth is know known...................
-								log.trace('scene dimensions: x=' + elements.webPanel.scene.getWidth() + ', y=' + elements.webPanel.scene.getHeight())
-								log.trace('Webview dimensions: x=' + browser.widthProperty().getValue() + ', y=' + browser.heightProperty().getValue())
-							}
+										}
+										consoleLog.error(output)
+										break;
+									case 'debug':
+										consoleLog.debug(output)
+										break;
+									case 'warning':
+										consoleLog.warn(output)
+										break;
+									case 'log': //Intentional fallthrough
+									case 'tip': //Intentional fallthrough
+									default:
+										consoleLog.info(output)
+										break;
+								}
+								break;
+							
+							default:
+								break;
 						}
-					})
-					
-					//Enable the debugger for the Console part only
-					webEngine.impl_getDebugger().setMessageCallback(debuggerCallback)
-					webEngine.impl_getDebugger().setEnabled(true)
-					webEngine.impl_getDebugger().sendMessage(JSON.stringify({
-						"id": 1,
-						"method": "Console.enable"
-					}))
-				}	
+						if (log.isTraceEnabled()) {
+							log.trace('JFXWebViewPanel form dimensions: x=' + controller.getFormWidth() + ', y=?')
+							log.trace('JFXPanel bean dimensions: x=' + elements.webPanel.getWidth() + ', y=' + elements.webPanel.getHeight())
+							//TODO: this raises errors in the log that getwidth is know known...................
+							log.trace('scene dimensions: x=' + elements.webPanel.scene.getWidth() + ', y=' + elements.webPanel.scene.getHeight())
+							log.trace('Webview dimensions: x=' + browser.widthProperty().getValue() + ', y=' + browser.heightProperty().getValue())
+						}
+					}
+				})
+				
+				//Enable the debugger for the Console part only
+				webEngine.impl_getDebugger().setMessageCallback(debuggerCallback)
+				webEngine.impl_getDebugger().setEnabled(true)
+				webEngine.impl_getDebugger().sendMessage(JSON.stringify({
+					"id": 1,
+					"method": "Console.enable"
+				}))
 					
 				//Logging of load exceptions
 				webEngine.getLoadWorker().exceptionProperty().addListener(new ChangeListener({
@@ -312,7 +310,7 @@ function setUpPanel() {
 						isJSObjectVarArgs = methods.some(function(val, idx, ar){
 							if (val.getName() == 'call') {
 								return val.isVarArgs()
-					}
+							}
 							return false
 						})
 					}
