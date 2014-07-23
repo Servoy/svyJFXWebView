@@ -110,7 +110,7 @@ function loadTestHTML() {
 			<a id="formLinkUpcallWithArgs" href="callback://forms.testSvyJFXWebView.upcallRecorder?fruit=banana&amp;brand=Chiquita">formMethod urlCallback with arguments</a><br/>
 			<a id="executeMethodUpcall" href="#" onclick="servoy.executeMethod('forms.testSvyJFXWebView.upcallRecorder')">executeMethod</a><br/>
 			<button id="executeMethodUpcallWithArgs" onclick="servoy.executeMethod('forms.testSvyJFXWebView.upcallRecorder', ['banana', window])">executeMethod with params</button>
-			<button id="executeMethodUpcallWithArgsAndCallback" onclick="console.log('Testing console.log');servoy.executeMethod('forms.testSvyJFXWebView.upcallRecorder', ['banana', callback])">executeMethod with params and callback</button>
+			<button id="executeMethodUpcallWithArgsAndCallback" onclick="servoy.executeMethod('forms.testSvyJFXWebView.upcallRecorder', ['banana', callback])">executeMethod with params and callback</button>
 		</body>
 	</html>
 	webPanel.loadContent(content.toXMLString().replace('<![CDATA[', '').replace(']]>', ''))
@@ -121,7 +121,7 @@ function loadTestHTML() {
  *
  * @properties={typeid:35,uuid:"0B1FE1B9-D52E-490C-8D04-622601093B10",variableType:4}
  */
-var TIME_OUT = 5000
+var TIME_OUT = 1000
 
 /**
  * @type {Number}
