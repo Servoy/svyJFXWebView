@@ -162,11 +162,14 @@ var init = (function() {
 			 * Therefore this code forces such instance creation, so JavaFX gets loaded if available
 			 */
 			log.trace('Trying forced JavaFX load')
-
+application.output('Trying forced JavaFX load')
 			var jfxPanel = new Packages.com.servoy.extensions.beans.jfxpanel.JFXPanel();
+application.output(jfxPanel)
 			/** @type {Packages.com.servoy.extensions.beans.jfxpanel.ServoyJFXPanel} */
 			var svyJFXPanel = jfxPanel.getBeanInstance(2,null,null)
+application.output(svyJFXPanel)
 			jfxAvailable = svyJFXPanel.isJavaFXAvailable()
+application.output(jfxAvailable)
 		}
 	}
 	
