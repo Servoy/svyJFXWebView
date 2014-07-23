@@ -110,10 +110,9 @@ function loadTestHTML() {
 			<a id="formLinkUpcallWithArgs" href="callback://forms.testSvyJFXWebView.upcallRecorder?fruit=banana&amp;brand=Chiquita">formMethod urlCallback with arguments</a><br/>
 			<a id="executeMethodUpcall" href="#" onclick="servoy.executeMethod('forms.testSvyJFXWebView.upcallRecorder')">executeMethod</a><br/>
 			<button id="executeMethodUpcallWithArgs" onclick="servoy.executeMethod('forms.testSvyJFXWebView.upcallRecorder', ['banana', window])">executeMethod with params</button>
-			<button id="executeMethodUpcallWithArgsAndCallback" onclick="alert('hello');servoy.executeMethod('forms.testSvyJFXWebView.upcallRecorder', ['banana', callback])">executeMethod with params and callback</button>
+			<button id="executeMethodUpcallWithArgsAndCallback" onclick="servoy.executeMethod('forms.testSvyJFXWebView.upcallRecorder', ['banana', callback])">executeMethod with params and callback</button>
 		</body>
 	</html>
-	//webPanel.loadContent(content.toXMLString())
 	webPanel.loadContent(content.toXMLString().replace('<![CDATA[', '').replace(']]>', ''))
 }
 
@@ -312,7 +311,6 @@ function testExecuteMethodWithArgsAndCallback() {
 		if (!scopes.svyUnitTestUtils.logMessages.ApplicationOutputAppender.length) {
 			jsunit.fail('callback not invoked within TIME_OUT period')
 		}
-		//TODO: assert if the callback was called by checking the console log output through the TestAppender
 		jsunit.assertEquals(1, scopes.svyUnitTestUtils.logMessages.ApplicationOutputAppender.length)
 		jsunit.assertEquals(' INFO c.s.b.c.w.console - callMe!!!! called with arguments: Hello', scopes.svyUnitTestUtils.logMessages.ApplicationOutputAppender[0])
 		
