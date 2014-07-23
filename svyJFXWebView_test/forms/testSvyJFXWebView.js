@@ -16,6 +16,11 @@
  */
 
 /**
+ * @properties={typeid:35,uuid:"29F09D57-7146-4F9C-92D8-C68C912BDC72",variableType:-4}
+ */
+var log = scopes.svyLogManager.getLogger('com.servoy.bap.component.webview.test')
+
+/**
  * @type {Object}
  *
  * @properties={typeid:35,uuid:"AF6C4E66-911A-4FE7-B21C-7496AEE5C126",variableType:-4}
@@ -74,7 +79,7 @@ function onAction(event) {
  * @properties={typeid:24,uuid:"A165781C-1DC1-44E0-942C-FFA18B8EC22D"}
  */
 function loadTestHTML() {
-	var content = <html>
+	var content = <html style="background-color: rgba(0,0,0,0)">
 		<head>
 			<script><![CDATA[
 			function callback() {
@@ -99,13 +104,13 @@ function loadTestHTML() {
 			]]>
 			</script>
 		</head>
-		<body>
-			<a id="localLinkCallback" href="callback://testCallback">Invoke local method urlCallback</a><br/>
-			<a id="formLinkCallback" href="callback://forms.testSvyJFXWebView.testCallback">formMethod urlCallback</a><br/>
-			<a id="formLinkCallbackWithArgs" href="callback://forms.testSvyJFXWebView.testCallback?fruit=banana&amp;brand=Chiquita">formMethod urlCallback with arguments</a><br/>
-			<a id="executeMethod" href="#" onclick="servoy.executeMethod('forms.testSvyJFXWebView.testCallback')">executeMethod</a><br/>
-			<button id="executeMethodWithArgs" onclick="servoy.executeMethod('forms.testSvyJFXWebView.testCallback', ['banana', window])">executeMethod with params</button>
-			<button id="executeMethodWithArgsAndCallback" onclick="alert('hello');servoy.executeMethod('forms.testSvyJFXWebView.testCallback', ['banana', callback])">executeMethod with params and callback</button>
+		<body style="background-color: transparent">
+			<a id="localLinkCallback" href="callback://callbackRecorder">Invoke local method urlCallback</a><br/>
+			<a id="formLinkCallback" href="callback://forms.testSvyJFXWebView.callbackRecorder">formMethod urlCallback</a><br/>
+			<a id="formLinkCallbackWithArgs" href="callback://forms.testSvyJFXWebView.callbackRecorder?fruit=banana&amp;brand=Chiquita">formMethod urlCallback with arguments</a><br/>
+			<a id="executeMethod" href="#" onclick="servoy.executeMethod('forms.testSvyJFXWebView.callbackRecorder')">executeMethod</a><br/>
+			<button id="executeMethodWithArgs" onclick="servoy.executeMethod('forms.testSvyJFXWebView.callbackRecorder', ['banana', window])">executeMethod with params</button>
+			<button id="executeMethodWithArgsAndCallback" onclick="alert('hello');servoy.executeMethod('forms.testSvyJFXWebView.callbackRecorder', ['banana', callback])">executeMethod with params and callback</button>
 		</body>
 	</html>
 	//webPanel.loadContent(content.toXMLString())
@@ -234,7 +239,7 @@ function testFormLinkCallbackWithArgs() {
 /**
  * @properties={typeid:24,uuid:"1A53D93A-A0CE-464C-BD67-5D50903771FD"}
  */
-function testCallback() {
+function callbackRecorder() {
 	callbackReceived = true
 	callbackArgs = arguments
 	return 'hello'
@@ -275,7 +280,7 @@ function testExecuteMethodWithArgs() {
 		jsunit.assertEquals(null, callbackArgs[1])
 		//Check for log entry about passing Window
 		jsunit.assertEquals(1, scopes.svyUnitTestUtils.logMessages.ApplicationOutputAppender.length)
-		var expectedLogMessage = ' WARN c.s.b.c.webpanel - Prevented passing non-JavaScript object to the Servoy scripting layer (value is replaced with null): [object DOMWindow]'
+		var expectedLogMessage = ' WARN c.s.b.c.webview - Prevented passing non-JavaScript object to the Servoy scripting layer (value is replaced with null): [object DOMWindow]'
 		jsunit.assertEquals(expectedLogMessage, scopes.svyUnitTestUtils.logMessages.ApplicationOutputAppender[0])
 	}
 }

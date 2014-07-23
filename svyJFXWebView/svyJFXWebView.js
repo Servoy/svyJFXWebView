@@ -150,7 +150,7 @@ var jfxAvailable = false
  */
 var init = (function() {
 	if (scopes.svySystem.isSwingClient()) {
-		jfxAvailable = typeof Packages.javafx.scene.web.WebView == 'function'
+		jfxAvailable = typeof Packages.javafx.scene.web.WebView === 'function'
 			
 		if (!jfxAvailable) {
 			/* In developer or the testrunner client JavaFX is loaded only when a instance of the JFXPanel bean is instantiated
