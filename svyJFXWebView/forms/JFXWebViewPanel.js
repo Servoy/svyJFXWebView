@@ -195,7 +195,8 @@ function setUpPanel() {
 									case 'error':
 										if (lastMessage.stackTrace) {
 											var first = true
-											for each (var callFrame in lastMessage.stackTrace) {
+											for (var i = 0; i < lastMessage.stackTrace; i++) {
+												var callFrame = lastMessage.stackTrace[i]
 												output += first ? ' ' : '\n\tat '
 												output += callFrame.url + ':' + callFrame.lineNumber + ' (' + callFrame.functionName + ')'
 												first = false

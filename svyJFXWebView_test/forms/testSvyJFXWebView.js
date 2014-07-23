@@ -79,41 +79,40 @@ function onAction(event) {
  * @properties={typeid:24,uuid:"A165781C-1DC1-44E0-942C-FFA18B8EC22D"}
  */
 function loadTestHTML() {
-	var content = <html style="background-color: rgba(0,0,0,0)">
-		<head>
-			<script><![CDATA[
-			function callback() {
-				/* Strings (probably other types as well) are not passed into the WebView scripting engine as strings, but as JavaRuntimeObject
-				 * This is most likely due to the fact that JavaScript strings passed from the Servoy scripting layer to the Java layer in Rhino 
-				 * are wrapped in some internal classes of Rhino and since the API of the WebView used to do the callback takes an Array of Objects
-				 * the Rhino engine doesn't knwo how to properly unwrap stuff.
-				 * 
-				 * Most of the time this isn't an issue, but it becomes an issue when doing typechecking or stringifcation, like:
-				 * console.log(arguments[0])
-				 * console.log(typeof arguments[0])
-				 * console.log(arguments[0] instanceof String)
-				 * console.log(Object.prototype.toString.call(arguments[0]))
-				 * console.log(arguments)
-				 * console.log(Array.prototype.slice.call(arguments))
-				 * console.log(JSON.stringify(Array.prototype.slice.call(arguments)))
-				 * console.log(JSON.stringify(arguments))
-				 */
-				
-				console.log('callMe!!!! called with arguments: ' + arguments[0])
-			}
-			]]>
-			</script>
-		</head>
-		<body style="background-color: transparent">
-			<a id="localLinkUpcall" href="callback://upcallRecorder">Invoke local method urlCallback</a><br/>
-			<a id="formLinkUpcall" href="callback://forms.testSvyJFXWebView.upcallRecorder">formMethod urlCallback</a><br/>
-			<a id="formLinkUpcallWithArgs" href="callback://forms.testSvyJFXWebView.upcallRecorder?fruit=banana&amp;brand=Chiquita">formMethod urlCallback with arguments</a><br/>
-			<a id="executeMethodUpcall" href="#" onclick="servoy.executeMethod('forms.testSvyJFXWebView.upcallRecorder')">executeMethod</a><br/>
-			<button id="executeMethodUpcallWithArgs" onclick="servoy.executeMethod('forms.testSvyJFXWebView.upcallRecorder', ['banana', window])">executeMethod with params</button>
-			<button id="executeMethodUpcallWithArgsAndCallback" onclick="servoy.executeMethod('forms.testSvyJFXWebView.upcallRecorder', ['banana', callback])">executeMethod with params and callback</button>
-		</body>
-	</html>
-	webPanel.loadContent(content.toXMLString().replace('<![CDATA[', '').replace(']]>', ''))
+	var content = '<html style="background-color: rgba(0,0,0,0)">\
+		<head>\
+			<script>\
+			function callback() {\
+				/* Strings (probably other types as well) are not passed into the WebView scripting engine as strings, but as JavaRuntimeObject\
+				 * This is most likely due to the fact that JavaScript strings passed from the Servoy scripting layer to the Java layer in Rhino \
+				 * are wrapped in some internal classes of Rhino and since the API of the WebView used to do the callback takes an Array of Objects\
+				 * the Rhino engine doesn\'t knwo how to properly unwrap stuff.\
+				 * \
+				 * Most of the time this isn\'t an issue, but it becomes an issue when doing typechecking or stringifcation, like:\
+				 * console.log(arguments[0])\
+				 * console.log(typeof arguments[0])\
+				 * console.log(arguments[0] instanceof String)\
+				 * console.log(Object.prototype.toString.call(arguments[0]))\
+				 * console.log(arguments)\
+				 * console.log(Array.prototype.slice.call(arguments))\
+				 * console.log(JSON.stringify(Array.prototype.slice.call(arguments)))\
+				 * console.log(JSON.stringify(arguments))\
+				 */\
+				\
+				console.log("callMe!!!! called with arguments: " + arguments[0])\
+			}\
+			</script>\
+		</head>\
+		<body style="background-color: transparent">\
+			<a id="localLinkUpcall" href="callback://upcallRecorder">Invoke local method urlCallback</a><br/>\
+			<a id="formLinkUpcall" href="callback://forms.testSvyJFXWebView.upcallRecorder">formMethod urlCallback</a><br/>\
+			<a id="formLinkUpcallWithArgs" href="callback://forms.testSvyJFXWebView.upcallRecorder?fruit=banana&amp;brand=Chiquita">formMethod urlCallback with arguments</a><br/>\
+			<a id="executeMethodUpcall" href="#" onclick="servoy.executeMethod(\'forms.testSvyJFXWebView.upcallRecorder\')">executeMethod</a><br/>\
+			<button id="executeMethodUpcallWithArgs" onclick="servoy.executeMethod(\'forms.testSvyJFXWebView.upcallRecorder\', [\'banana\', window])">executeMethod with params</button>\
+			<button id="executeMethodUpcallWithArgsAndCallback" onclick="servoy.executeMethod(\'forms.testSvyJFXWebView.upcallRecorder\', [\'banana\', callback])">executeMethod with params and callback</button>\
+		</body>\
+	</html>'
+	webPanel.loadContent(content)
 }
 
 /**
