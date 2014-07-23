@@ -151,9 +151,9 @@ var jfxAvailable = false
 var init = (function() {
 	if (scopes.svySystem.isSwingClient()) {
 		application.output('JFXInit called')
-		application.output(typeof Packages.javafx.scene.web.WebView)
+		application.output(typeof Packages.scene.Node)
 		
-		jfxAvailable = typeof Packages.javafx.scene.web.WebView === 'function'
+		jfxAvailable = typeof Packages.scene.Node === 'function'
 		application.output(jfxAvailable)
 			
 		if (!jfxAvailable) {
