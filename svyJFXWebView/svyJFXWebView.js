@@ -150,11 +150,7 @@ var jfxAvailable = false
  */
 var init = (function() {
 	if (scopes.svySystem.isSwingClient()) {
-		application.output('JFXInit called')
-		application.output(typeof Packages.scene.Node)
-		
 		jfxAvailable = typeof Packages.scene.Node === 'function'
-		application.output(jfxAvailable)
 			
 		if (!jfxAvailable) {
 			/* In developer or the testrunner client JavaFX is loaded only when a instance of the JFXPanel bean is instantiated
@@ -162,17 +158,13 @@ var init = (function() {
 			 * Therefore this code forces such instance creation, so JavaFX gets loaded if available
 			 */
 			log.trace('Trying forced JavaFX load')
-application.output('Trying forced JavaFX load')
 			var jfxPanel = new Packages.com.servoy.extensions.beans.jfxpanel.JFXPanel();
-application.output(jfxPanel)
 			/** @type {Packages.com.servoy.extensions.beans.jfxpanel.ServoyJFXPanel} */
 			var svyJFXPanel = jfxPanel.getBeanInstance(2,null,null)
-application.output(svyJFXPanel)
 			jfxAvailable = svyJFXPanel.isJavaFXAvailable()
-application.output(jfxAvailable)
 		}
 	}
-application.output(typeof Packages.javafx.scene.web.WebView)	
+
 	if (jfxAvailable) {
 		/*
 		 * Registering a URLStreamHandler for the 'callback://' protocol, to be used from within HTML inside JFXWebView to do callbacks to Servoy's JavaScript layer based on URL's 
