@@ -105,12 +105,12 @@ function loadTestHTML() {
 			</script>
 		</head>
 		<body style="background-color: transparent">
-			<a id="localLinkCallback" href="callback://callbackRecorder">Invoke local method urlCallback</a><br/>
-			<a id="formLinkCallback" href="callback://forms.testSvyJFXWebView.callbackRecorder">formMethod urlCallback</a><br/>
-			<a id="formLinkCallbackWithArgs" href="callback://forms.testSvyJFXWebView.callbackRecorder?fruit=banana&amp;brand=Chiquita">formMethod urlCallback with arguments</a><br/>
-			<a id="executeMethod" href="#" onclick="servoy.executeMethod('forms.testSvyJFXWebView.callbackRecorder')">executeMethod</a><br/>
-			<button id="executeMethodWithArgs" onclick="servoy.executeMethod('forms.testSvyJFXWebView.callbackRecorder', ['banana', window])">executeMethod with params</button>
-			<button id="executeMethodWithArgsAndCallback" onclick="alert('hello');servoy.executeMethod('forms.testSvyJFXWebView.callbackRecorder', ['banana', callback])">executeMethod with params and callback</button>
+			<a id="localLinkUpcall" href="callback://upcallRecorder">Invoke local method urlCallback</a><br/>
+			<a id="formLinkUpcall" href="callback://forms.testSvyJFXWebView.upcallRecorder">formMethod urlCallback</a><br/>
+			<a id="formLinkUpcallWithArgs" href="callback://forms.testSvyJFXWebView.upcallRecorder?fruit=banana&amp;brand=Chiquita">formMethod urlCallback with arguments</a><br/>
+			<a id="executeMethodUpcall" href="#" onclick="servoy.executeMethod('forms.testSvyJFXWebView.upcallRecorder')">executeMethod</a><br/>
+			<button id="executeMethodUpcallWithArgs" onclick="servoy.executeMethod('forms.testSvyJFXWebView.upcallRecorder', ['banana', window])">executeMethod with params</button>
+			<button id="executeMethodUpcallWithArgsAndCallback" onclick="alert('hello');servoy.executeMethod('forms.testSvyJFXWebView.upcallRecorder', ['banana', callback])">executeMethod with params and callback</button>
 		</body>
 	</html>
 	//webPanel.loadContent(content.toXMLString())
@@ -134,14 +134,14 @@ var UPDATE_WAIT = 100
 /**
  * @properties={typeid:35,uuid:"D0C22038-4F6D-4B86-B915-CB7BAC3EE61F",variableType:-4}
  */
-var callbackReceived = false
+var upcallReceived = false
 
 /**
  * @type {Object}
  *
  * @properties={typeid:35,uuid:"D34CE311-6F27-435D-A59F-36A5A8DB9769",variableType:-4}
  */
-var callbackArgs
+var upcallArgs
 
 /**
  * @properties={typeid:24,uuid:"2984ECAC-6BEC-4CF7-84A6-FF1291A85A4A"}
@@ -188,60 +188,60 @@ function setUp() {
 /**
  * @properties={typeid:24,uuid:"F43C6B16-AD03-45DD-B8A4-911279EB0B7E"}
  */
-function testLocalLinkCallback() {
-	callbackReceived = false
-	webPanel.executeScriptLater('var evt = document.createEvent("MouseEvents"); evt.initEvent("click",true,true); document.getElementById("localLinkCallback").dispatchEvent(evt)')
+function testLocalLinkUpcall() {
+	upcallReceived = false
+	webPanel.executeScriptLater('var evt = document.createEvent("MouseEvents"); evt.initEvent("click",true,true); document.getElementById("localLinkUpcall").dispatchEvent(evt)')
 	var it = 0
-	while (!callbackReceived && it < TIME_OUT / UPDATE_WAIT) {
+	while (!upcallReceived && it < TIME_OUT / UPDATE_WAIT) {
 		application.updateUI(UPDATE_WAIT);
 		it++
 	}
-	if (!callbackReceived) {
-		jsunit.fail('callback not invoked within TIME_OUT period')
+	if (!upcallReceived) {
+		jsunit.fail('upcall not invoked within TIME_OUT period')
 	}
 }
 
 /**
  * @properties={typeid:24,uuid:"A37787B4-FE44-4D18-B2BF-9501818C880D"}
  */
-function testFormLinkCallback() {
-	callbackReceived = false
-	webPanel.executeScriptLater('var evt = document.createEvent("MouseEvents"); evt.initEvent("click",true,true); document.getElementById("formLinkCallback").dispatchEvent(evt)')
+function testFormLinkUpcall() {
+	upcallReceived = false
+	webPanel.executeScriptLater('var evt = document.createEvent("MouseEvents"); evt.initEvent("click",true,true); document.getElementById("formLinkUpcall").dispatchEvent(evt)')
 	var it = 0
-	while (!callbackReceived && it < TIME_OUT / UPDATE_WAIT) {
+	while (!upcallReceived && it < TIME_OUT / UPDATE_WAIT) {
 		application.updateUI(UPDATE_WAIT);
 		it++
 	}
-	if (!callbackReceived) {
-		jsunit.fail('callback not invoked within TIME_OUT period')
+	if (!upcallReceived) {
+		jsunit.fail('upcall not invoked within TIME_OUT period')
 	}
 }
 
 /**
  * @properties={typeid:24,uuid:"3FEC9BC4-0108-48FD-B828-6E50A68BDC5C"}
  */
-function testFormLinkCallbackWithArgs() {
-	callbackReceived = false
-	webPanel.executeScriptLater('var evt = document.createEvent("MouseEvents"); evt.initEvent("click",true,true); document.getElementById("formLinkCallbackWithArgs").dispatchEvent(evt)')
+function testFormLinkUpcallWithArgs() {
+	upcallReceived = false
+	webPanel.executeScriptLater('var evt = document.createEvent("MouseEvents"); evt.initEvent("click",true,true); document.getElementById("formLinkUpcallWithArgs").dispatchEvent(evt)')
 	var it = 0
-	while (!callbackReceived && it < TIME_OUT / UPDATE_WAIT) {
+	while (!upcallReceived && it < TIME_OUT / UPDATE_WAIT) {
 		application.updateUI(UPDATE_WAIT);
 		it++
 	}
-	if (!callbackReceived) {
-		jsunit.fail('callback not invoked within TIME_OUT period')
+	if (!upcallReceived) {
+		jsunit.fail('upcallnot invoked within TIME_OUT period')
 	} else {
-		jsunit.assertEquals('banana', callbackArgs[0]['fruit'][0])
-		jsunit.assertEquals('Chiquita', callbackArgs[0]['brand'][0])
+		jsunit.assertEquals('banana', upcallArgs[0]['fruit'][0])
+		jsunit.assertEquals('Chiquita', upcallArgs[0]['brand'][0])
 	}
 }
 
 /**
  * @properties={typeid:24,uuid:"1A53D93A-A0CE-464C-BD67-5D50903771FD"}
  */
-function callbackRecorder() {
-	callbackReceived = true
-	callbackArgs = arguments
+function upcallRecorder() {
+	upcallReceived = true
+	upcallArgs = arguments
 	return 'hello'
 }
 
@@ -249,15 +249,15 @@ function callbackRecorder() {
  * @properties={typeid:24,uuid:"0F15ACFE-DBD3-4E18-B0F6-A96EC3A41FFF"}
  */
 function testExecuteMethod() {
-	callbackReceived = false
-	webPanel.executeScriptLater('var evt = document.createEvent("MouseEvents"); evt.initEvent("click",true,true); document.getElementById("executeMethod").dispatchEvent(evt)')
+	upcallReceived = false
+	webPanel.executeScriptLater('var evt = document.createEvent("MouseEvents"); evt.initEvent("click",true,true); document.getElementById("executeMethodUpcall").dispatchEvent(evt)')
 	var it = 0
-	while (!callbackReceived && it < TIME_OUT / UPDATE_WAIT) {
+	while (!upcallReceived && it < TIME_OUT / UPDATE_WAIT) {
 		application.updateUI(UPDATE_WAIT);
 		it++
 	}
-	if (!callbackReceived) {
-		jsunit.fail('callback not invoked within TIME_OUT period')
+	if (!upcallReceived) {
+		jsunit.fail('upcall not invoked within TIME_OUT period')
 	}
 }
 
@@ -265,19 +265,19 @@ function testExecuteMethod() {
  * @properties={typeid:24,uuid:"6126C37D-25A2-4602-8133-DEEB7D319DD0"}
  */
 function testExecuteMethodWithArgs() {
-	callbackReceived = false
-	webPanel.executeScriptLater('document.getElementById("executeMethodWithArgs").click()')
+	upcallReceived = false
+	webPanel.executeScriptLater('document.getElementById("executeMethodUpcallWithArgs").click()')
 	var it = 0
-	while (!callbackReceived && it < TIME_OUT / UPDATE_WAIT) {
+	while (!upcallReceived && it < TIME_OUT / UPDATE_WAIT) {
 		application.updateUI(UPDATE_WAIT);
 		it++
 	}
-	if (!callbackReceived) {
-		jsunit.fail('callback not invoked within TIME_OUT period')
+	if (!upcallReceived) {
+		jsunit.fail('upcall not invoked within TIME_OUT period')
 	} else {
-		jsunit.assertEquals(2, callbackArgs.length)
-		jsunit.assertEquals('banana', callbackArgs[0])
-		jsunit.assertEquals(null, callbackArgs[1])
+		jsunit.assertEquals(2, upcallArgs.length)
+		jsunit.assertEquals('banana', upcallArgs[0])
+		jsunit.assertEquals(null, upcallArgs[1])
 		//Check for log entry about passing Window
 		jsunit.assertEquals(1, scopes.svyUnitTestUtils.logMessages.ApplicationOutputAppender.length)
 		var expectedLogMessage = ' WARN c.s.b.c.webview - Prevented passing non-JavaScript object to the Servoy scripting layer (value is replaced with null): [object DOMWindow]'
@@ -289,21 +289,21 @@ function testExecuteMethodWithArgs() {
  * @properties={typeid:24,uuid:"A9AE4F84-3D0C-4A21-B48A-77490C101D4B"}
  */
 function testExecuteMethodWithArgsAndCallback() {
-	callbackReceived = false
-	webPanel.executeScriptLater('document.getElementById("executeMethodWithArgsAndCallback").click()')
+	upcallReceived = false
+	webPanel.executeScriptLater('document.getElementById("executeMethodUpcallWithArgsAndCallback").click()')
 	var it = 0
-	while (!callbackReceived && it < TIME_OUT / UPDATE_WAIT) {
+	while (!upcallReceived && it < TIME_OUT / UPDATE_WAIT) {
 		application.updateUI(UPDATE_WAIT);
 		it++
 	}
-	if (!callbackReceived) {
-		jsunit.fail('callback not invoked within TIME_OUT period')
+	if (!upcallReceived) {
+		jsunit.fail('upcall not invoked within TIME_OUT period')
 	} else {
-		jsunit.assertEquals(2, callbackArgs.length)
-		jsunit.assertEquals('banana', callbackArgs[0])
-		jsunit.assertEquals('function', typeof callbackArgs[1])
+		jsunit.assertEquals(2, upcallArgs.length)
+		jsunit.assertEquals('banana', upcallArgs[0])
+		jsunit.assertEquals('function', typeof upcallArgs[1])
 		scopes.svyUnitTestUtils.logMessages.ApplicationOutputAppender.length = 0
-		callbackArgs[1]('Hello', 1)
+		upcallArgs[1]('Hello', 1)
 		it = 0
 		while (!scopes.svyUnitTestUtils.logMessages.ApplicationOutputAppender.length && it < TIME_OUT / UPDATE_WAIT) {
 			application.updateUI(UPDATE_WAIT);
