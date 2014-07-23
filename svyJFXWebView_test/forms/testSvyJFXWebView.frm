@@ -19,12 +19,13 @@ typeid:7,
 uuid:"58CD9831-8699-4FD2-96C2-8EE7723A9D7E"
 },
 {
+anchors:14,
 location:"33,43",
 onActionMethodID:"-1",
 onDoubleClickMethodID:"-1",
 onRightClickMethodID:"-1",
 size:"150,20",
-text:"Test Transparency",
+text:"If you can read this, transparency works!",
 typeid:7,
 uuid:"6AD3DFC1-2100-422D-9C2B-D4C8AB122A6D"
 },
