@@ -1,32 +1,32 @@
 /*
- * This file is part of the Servoy Business Application Platform, Copyright (C) 2012-2013 Servoy BV 
- * 
+ * This file is part of the Servoy Business Application Platform, Copyright (C) 2012-2013 Servoy BV
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
- /**
-  * @private
-  * @properties={typeid:35,uuid:"D01B2F1E-047D-4A93-BB4C-00DED8AEAD6A",variableType:-4}
-  */
- var log = scopes.svyLogManager.getLogger('com.servoy.bap.components.webview')
+/**
+ * @private
+ * @properties={typeid:35,uuid:"D01B2F1E-047D-4A93-BB4C-00DED8AEAD6A",variableType:-4}
+ */
+var log = scopes.svyLogManager.getLogger('com.servoy.bap.components.webview')
 
 /**
  * Creates and displays a JavaFX WebView component in the supplied container<br>
  * <br>
  * This component depends on the availability of JavaFX, which must be made available in Smart Clients by setting the property <i>servoy.client.javafx</i> to true through the Admin pages<br>
  * <br>
- * JavaFX comes pre-installed with Java 7 update 6 or higher. 
+ * JavaFX comes pre-installed with Java 7 update 6 or higher.
  * On Java 7 < update 6 the user gets prompted when starting the Smart Client to install JavaFX if JavaFX is not yet installed
  * On Java 6 JavaFX must be manually installed and is only available on Windows<br>
  * <br>
@@ -45,10 +45,10 @@
  * <li>Loading websites that require (basic http) authentication will result in a login dialog popup, regardless if the username/password are passed in through the URL</li>
  * <li>=< Servoy 7.3: After being loaded a first time, JS & CSS are cached for the duration of JVM session. Especially in Servoy Developer this is cumbersome, as it requires restarting Servoy Developer to test changes</li>
  * </ul>
- * 
+ *
  * @constructor
  * @param {RuntimeTabPanel} container
- * 
+ *
  * @example <pre>
  * var panel = new scopes.modJFXWebView.WebViewPanel(elements.myTablessTabPanel)
  * panel.load('http://servoy.com')
@@ -74,7 +74,7 @@
 function WebViewPanel(container) {
 	if (!jfxAvailable) {
 		log.warn('Attempting to use svyJFXWebView when JavaFX is not available (Java version: ' + Packages.java.lang.System.getProperty("java.version") + ')')
-		var dummy = function(){
+		var dummy = function() {
 			log.warn('Attempting to use svyJFXWebView when JavaFX is not available (Java version: ' + Packages.java.lang.System.getProperty("java.version") + ')')
 		}
 		return {
@@ -85,10 +85,10 @@ function WebViewPanel(container) {
 			enableFirebug: dummy
 		}
 	}
-	
+
 	var formName = application.getUUID().toString()
 	application.createNewFormInstance("JFXWebViewPanel", formName)
-	
+
 	container.removeAllTabs()
 	container.addTab(forms[formName])
 
@@ -106,7 +106,7 @@ function WebViewPanel(container) {
 	this.loadContent = function(content, contentType) {
 		forms[formName].loadContent(content, contentType)
 	}
-	
+
 	/**
 	 * Executes the supplied script in the JavaFX WebView and waits for the script to be executed and then returns the return value of the executed script<br>
 	 * <br>
@@ -131,7 +131,7 @@ function WebViewPanel(container) {
 	this.executeScriptLater = function(script) {
 		forms[formName].executeScriptLater(script)
 	}
-	
+
 	this.enableFirebug = function() {
 		forms[formName].enableFirebug()
 	}
@@ -144,14 +144,22 @@ function WebViewPanel(container) {
 var jfxAvailable = false
 
 /**
- * @private 
+ * @private
  * @SuppressWarnings(unused)
  * @properties={typeid:35,uuid:"2C1A4FD1-06D8-40CD-BC62-7FFE638FE97E",variableType:-4}
  */
 var init = (function() {
 	if (scopes.svySystem.isSwingClient()) {
+		/* Getting ClientPluginAccess needed for at least registerURLStreamHandler
+		 * Using inlined code from scopes.svySmartClientUtils.getSmartClientPluginAccess as to not have to make registerURLStreamHandler a public method, since too dangerous:
+		 * using registerURLStreamHandler with a Java Class that has a (partial) JavaScript implementation causes mem-leaks and errors after switching solution
+		 * */
+		var x = new Packages.org.mozilla.javascript.NativeJavaObject(globals, plugins.window, new Packages.org.mozilla.javascript.JavaMembers(globals, Packages.com.servoy.extensions.plugins.window.WindowProvider));
+		/** @type {Packages.com.servoy.j2db.plugins.IClientPluginAccess} */
+		var clientPluginAccess = x['getClientPluginAccess']()
+
 		jfxAvailable = typeof Packages.scene.Node === 'function'
-			
+
 		if (!jfxAvailable) {
 			/* In developer or the testrunner client JavaFX is loaded only when a instance of the JFXPanel bean is instantiated
 			 * It can happen that this code is executed before a JFXPanel instance is created
@@ -160,33 +168,32 @@ var init = (function() {
 			log.trace('Trying forced JavaFX load')
 			var jfxPanel = new Packages.com.servoy.extensions.beans.jfxpanel.JFXPanel();
 			/** @type {Packages.com.servoy.extensions.beans.jfxpanel.ServoyJFXPanel} */
-			var svyJFXPanel = jfxPanel.getBeanInstance(2,null,null)
+			var svyJFXPanel = jfxPanel.getBeanInstance(2, clientPluginAccess, null)
 			jfxAvailable = svyJFXPanel.isJavaFXAvailable()
 		}
-	}
 
-	if (jfxAvailable) {
-		/*
-		 * Registering a URLStreamHandler for the 'callback://' protocol, to be used from within HTML inside JFXWebView to do callbacks to Servoy's JavaScript layer based on URL's 
-		 * 
-		 * The URLStreamHandler for the 'callback://' protocol is needed to be able to intercept requests to such URL's.
-		 * 
-		 * The webengine's LoadWorker State change Listener cancels loading of urls with the callback protocol before the Java layer actually tries to resolve the url and fires a Servoy method instead
-		 * 
-		 * As a URLStreamHandler that is registered remains registered when switching solutions in the Smart Client or when restarting Debug Smart Clients in Developer,
-		 * a real compiled Java Class is used, as extending URLStreamHandler and implementing IDeveloperURLStreamHandler using Rhino's Java/JavaScript interaction capabilities 
-		 * would create a Java Class that holds onto the JavaScript scope in which it is created, which in turn would cause errors and memory leaks when switching solutions in the SC/restarting DSC's
-		 * 
-		 * In order to not have external dependencies on beans/plugins, the required Java class is stored in the media library, which in turn requires a custom URLCLassLoader to retrieve it
-		 */
-		var cx = Packages.org.mozilla.javascript.Context.getCurrentContext()
-		var customCL = java.net.URLClassLoader([new java.net.URL("media:///bin/")], cx.getApplicationClassLoader())
-		
-		var dummyURLStreamHandlerClass = java.lang.Class.forName("com.servoy.bap.webpane.DummyURLStreamHandler", false, customCL)
-		
-		//Using inlined code from scopes.svySmartClientUtils.getSmartClientPluginAccess so not having to make registerURLStreamHandler a public method, since too dangerous:
-		//using registerURLStreamHandler with a Java Class that has a (partial) JavaScript implementation causes mem-leaks and errors after switching solution
-		var x = new Packages.org.mozilla.javascript.NativeJavaObject(globals, plugins.window, new Packages.org.mozilla.javascript.JavaMembers(globals, Packages.com.servoy.extensions.plugins.window.WindowProvider));
-		x['getClientPluginAccess']().registerURLStreamHandler('callback', dummyURLStreamHandlerClass.newInstance())
+		if (jfxAvailable) {
+			/*
+			 * Registering a URLStreamHandler for the 'callback://' protocol, to be used from within HTML inside JFXWebView to do callbacks to Servoy's JavaScript layer based on URL's
+			 *
+			 * The URLStreamHandler for the 'callback://' protocol is needed to be able to intercept requests to such URL's.
+			 *
+			 * The webengine's LoadWorker State change Listener cancels loading of urls with the callback protocol before the Java layer actually tries to resolve the url and fires a Servoy method instead
+			 *
+			 * As a URLStreamHandler that is registered remains registered when switching solutions in the Smart Client or when restarting Debug Smart Clients in Developer,
+			 * a real compiled Java Class is used, as extending URLStreamHandler and implementing IDeveloperURLStreamHandler using Rhino's Java/JavaScript interaction capabilities
+			 * would create a Java Class that holds onto the JavaScript scope in which it is created, which in turn would cause errors and memory leaks when switching solutions in the SC/restarting DSC's
+			 *
+			 * In order to not have external dependencies on beans/plugins, the required Java class is stored in the media library, which in turn requires a custom URLCLassLoader to retrieve it
+			 */
+			var cx = Packages.org.mozilla.javascript.Context.getCurrentContext()
+			var customCL = java.net.URLClassLoader([new java.net.URL("media:///bin/")], cx.getApplicationClassLoader())
+
+			var dummyURLStreamHandlerClass = java.lang.Class.forName("com.servoy.bap.webpane.DummyURLStreamHandler", false, customCL)
+			/** @type {java.net.URLStreamHandler} */
+			var dummyURLStreamHandlerInstance = dummyURLStreamHandlerClass.newInstance();
+			
+			clientPluginAccess.registerURLStreamHandler('callback', dummyURLStreamHandlerInstance);
+		}
 	}
 }())
