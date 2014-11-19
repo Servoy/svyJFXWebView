@@ -4,6 +4,31 @@ svyJFXWebView
 A HTML5 WebView component for the Servoy Smart Client. 'svyJFXWebView' is a module of the Servoy Business Application Platform.
 
 
+Getting started
+-------------
+To use the svyJFXWebView module download the [svyJFXWebView.zip](https://github.com/Servoy/svyJFXWebView/releases) file extract the .servoy files and import them into your workspace. 
+To use the WebView component add the svyJFXWebView module to the active solution;
+load the HTML5 content into a tabless panel using the svyJFXWebView scope methods:
+
+
+```javascript
+var webPanel = new scopes.svyJFXWebView.WebViewPanel(elements.tabless);
+// load custom HTML5 into the WebView
+webPanel.loadContent('<html>Hello WebView !</html>');
+// or load url into the WebView
+webPanel.load('http://www.servoy.com/');
+```
+
+To use the latest source code clone the git repository and checkout the develop branch. Install the [egit](http://www.eclipse.org/egit/download/) plugin for Eclipse to clone the repository and import the projects into the workspace.
+
+
+Requirements
+-------------
+The WebView component requires the JFXPanel Bean.
+The JFXPanel requires Servoy 7.2 or higher and Java 7 update 6 or above. 
+For more details about the JFXPanel look at the [Servoy docs](https://wiki.servoy.com/display/Serv7/JFXPanel+Bean)
+
+
 Documentation
 -------------
 See the [Wiki](https://github.com/Servoy/svyJFXWebView/wiki) for the available documentation
