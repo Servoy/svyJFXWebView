@@ -24,8 +24,7 @@ To use the latest source code clone the git repository and checkout the develop 
 
 Requirements
 -------------
-The WebView component requires the JFXPanel Bean.
-The JFXPanel requires Servoy 7.2 or higher and Java 7 update 6 or above. 
+The WebView component requires the JFXPanel Bean which is available since Servoy 7.2 or higher.
 For more details about the JFXPanel look at the [Servoy docs](https://wiki.servoy.com/display/Serv7/JFXPanel+Bean)
 
 
