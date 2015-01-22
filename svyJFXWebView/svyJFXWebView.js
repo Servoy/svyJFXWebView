@@ -144,6 +144,21 @@ function WebViewPanel(container) {
 var jfxAvailable = false
 
 /**
+ * Returns <code>true</code> if JavaFX is available for use in the smart client<br>
+ * 
+ * In the web client, this always returns <code>true</code>.
+ *
+ * @properties={typeid:24,uuid:"D2D3C152-29B7-4845-82B2-CF783C78ABC2"}
+ */
+function isJavaFxAvailable() {
+	if (scopes.svySystem.isSwingClient()) {
+		return jfxAvailable;
+	} else {
+		return true;
+	}
+}
+
+/**
  * @private
  * @SuppressWarnings(unused)
  * @properties={typeid:35,uuid:"2C1A4FD1-06D8-40CD-BC62-7FFE638FE97E",variableType:-4}
