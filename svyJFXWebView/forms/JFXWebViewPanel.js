@@ -474,6 +474,23 @@ function load(url) {
 	if (!webEngine) {
 		return;
 	}
+	
+	var _cancelLatch = new java.util.concurrent.CountDownLatch(1)
+	Packages.javafx.application.Platform.runLater(new java.lang.Runnable({
+		run: function() {
+			try
+			{	
+				webEngine.getLoadWorker().cancel();
+			}
+			finally
+			{
+				_cancelLatch.countDown()
+			}
+		}
+	}));
+	
+	_cancelLatch.await()
+	
 	webEngineReady = false //prevent {@link executeScript} execution
 	Packages.javafx.application.Platform.runLater(new java.lang.Runnable({
 		run: function() {
@@ -485,7 +502,6 @@ function load(url) {
 			}
 		}
 	}))
-}
 
 /**
  * @param {String} content
