@@ -502,6 +502,7 @@ function load(url) {
 			}
 		}
 	}))
+}
 
 /**
  * @param {String} content
