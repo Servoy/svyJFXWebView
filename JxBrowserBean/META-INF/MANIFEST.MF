@@ -1,0 +1,4 @@
+Manifest-Version: 1.0
+
+Name: com/servoy/JxBrowserBean/svyJxBrowserBean.class
+Java-Bean: True
