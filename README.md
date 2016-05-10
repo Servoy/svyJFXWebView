@@ -45,4 +45,4 @@ Eager to fix a bug or introduce a new feature? Clone the repository and issue a 
 
 License
 -------
-svyJFXWebView is licensed under LGPL
+svyJFXWebView is licensed under MIT License
