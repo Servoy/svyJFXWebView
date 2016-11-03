@@ -116,17 +116,29 @@ function setUpPanel() {
 			}
 		}
 		
-		if (Packages.javax.swing.SwingUtilities.isEventDispatchThread()) { //This scenario is not likely to happen
+		//some Java versions suffer from a bug (http://bugs.java.com/bugdatabase/view_bug.do?bug_id=8019272)
+		//when calling isEventDispatchThread or invokeLater from a different RMI thread
+		var isEventDispatchThread = false;
+		try {
+			isEventDispatchThread = Packages.javax.swing.SwingUtilities.isEventDispatchThread();
+		} catch(e) {	
+		}
+		
+		if (isEventDispatchThread) { //This scenario is not likely to happen
 			log.debug('Performing upcall directly on Swing\'s EDT')
 			callMethod()
 		} else {
 			log.debug('Performing upcall through SwingUtilities.invokeLater')
-			Packages.javax.swing.SwingUtilities.invokeLater(new Runnable({
+			Packages.com.servoy.j2db.J2DBGlobals.getServiceProvider().getScheduledExecutor().execute(new Runnable({
 				run: function() {
-					log.debug('Performing upcall through SwingUtilities.invokeLater: run called')
-					callMethod()
+					Packages.javax.swing.SwingUtilities.invokeLater(new Runnable({
+						run: function() {
+							log.debug('Performing upcall through SwingUtilities.invokeLater: run called')
+							callMethod()
+						}
+					}))
 				}
-			}))
+			}));
 		}
 	}
 
