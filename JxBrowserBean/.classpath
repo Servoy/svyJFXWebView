@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="C:/Temp/lib/jxbrowser-6.3.jar"/>
+	<classpathentry kind="lib" path="C:/Temp/lib/jxbrowser-linux32-6.3.jar"/>
+	<classpathentry kind="lib" path="C:/Temp/lib/jxbrowser-linux64-6.3.jar"/>
+	<classpathentry kind="lib" path="C:/Temp/lib/jxbrowser-mac-6.3.jar"/>
+	<classpathentry kind="lib" path="C:/Temp/lib/jxbrowser-win-6.3.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/servoy"/>
+	<classpathentry kind="lib" path="C:/Servoy/application_server/plugins/license.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
