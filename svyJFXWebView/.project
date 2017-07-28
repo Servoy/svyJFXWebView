@@ -4,7 +4,6 @@
 	<comment></comment>
 	<projects>
 		<project>resources</project>
-		<project>resources</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
