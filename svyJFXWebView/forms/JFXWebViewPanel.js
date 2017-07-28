@@ -474,6 +474,9 @@ function setUpPanel() {
  * @properties={typeid:24,uuid:"21AC843D-1481-4CBC-9D6E-6E67803E0052"}
  */
 function onLoad(event) {
+	if ('TRUST_DATA_AS_HTML' in APP_UI_PROPERTY) {
+		elements.webPanel.putClientProperty(APP_UI_PROPERTY['TRUST_DATA_AS_HTML'], 'true');
+	}
 	setUpPanel()
 }
 
